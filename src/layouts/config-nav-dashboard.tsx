@@ -29,7 +29,7 @@ export const navData = [
     ),
   },
   {
-    title: 'Blog',
+    title: 'Reportes',
     path: '/blog',
     icon: icon('ic-blog'),
   },

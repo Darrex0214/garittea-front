@@ -1,71 +1,102 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
-import Pagination from '@mui/material/Pagination';
+import Grid from '@mui/material/Unstable_Grid2';
+import { useTheme } from '@mui/material/styles';
+import Container from '@mui/material/Container';
+import CardMedia from '@mui/material/CardMedia';
+import CardContent from '@mui/material/CardContent';
+import CardActionArea from '@mui/material/CardActionArea';
 
-import { _posts } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-
 import { Iconify } from 'src/components/iconify';
-
-import { PostItem } from '../post-item';
-import { PostSort } from '../post-sort';
-import { PostSearch } from '../post-search';
 
 // ----------------------------------------------------------------------
 
 export function BlogView() {
-  const [sortBy, setSortBy] = useState('latest');
-
-  const handleSort = useCallback((newSort: string) => {
-    setSortBy(newSort);
-  }, []);
+  const theme = useTheme();
+  const navigate = useNavigate();
 
   return (
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Blog
+          Reportes
         </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          New post
-        </Button>
-      </Box>
-
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 5 }}>
-        <PostSearch posts={_posts} />
-        <PostSort
-          sortBy={sortBy}
-          onSort={handleSort}
-          options={[
-            { value: 'latest', label: 'Latest' },
-            { value: 'popular', label: 'Popular' },
-            { value: 'oldest', label: 'Oldest' },
-          ]}
-        />
       </Box>
 
       <Grid container spacing={3}>
-        {_posts.map((post, index) => {
-          const latestPostLarge = index === 0;
-          const latestPost = index === 1 || index === 2;
+        <Grid xs={12} md={4}>
+          <Card>
+            <CardActionArea onClick={() => navigate('/report-generator', { state: { reportType: 'creditosRegistrados' } })}>
+              <CardMedia
+                component="img"
+                height="140"
+                image="/assets/icons/reports/credit-report.png"
+                alt="Créditos Registrados"
+                sx={{ padding: 2, objectFit: 'contain' }}
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  Creación de reporte de Créditos Registrados
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Generar un informe detallado de los créditos registrados en el sistema.
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
 
-          return (
-            <Grid key={post.id} xs={12} sm={latestPostLarge ? 12 : 6} md={latestPostLarge ? 6 : 3}>
-              <PostItem post={post} latestPost={latestPost} latestPostLarge={latestPostLarge} />
-            </Grid>
-          );
-        })}
+        <Grid xs={12} md={4}>
+          <Card>
+            <CardActionArea onClick={() => navigate('/report-generator', { state: { reportType: 'seguimientoPagos' } })}>
+              <CardMedia
+                component="img"
+                height="140"
+                image="/assets/icons/reports/payment-tracking.png"
+                alt="Seguimiento de Pagos"
+                sx={{ padding: 2, objectFit: 'contain' }}
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  Creación de reporte de Seguimiento de Pagos
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Generar un informe detallado del seguimiento de pagos en el sistema.
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
+
+        <Grid xs={12} md={4}>
+          <Card>
+            <CardActionArea onClick={() => navigate('/report-generator', { state: { reportType: 'validacionPagos' } })}>
+              <CardMedia
+                component="img"
+                height="140"
+                image="/assets/icons/reports/payment-validation.png"
+                alt="Validación de Pagos"
+                sx={{ padding: 2, objectFit: 'contain' }}
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  Creación de reporte de Validación de Pagos
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Generar un informe detallado de validación de pagos en el sistema.
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
       </Grid>
-
-      <Pagination count={10} color="primary" sx={{ mt: 8, mx: 'auto' }} />
     </DashboardContent>
   );
 }
