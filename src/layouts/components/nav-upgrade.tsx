@@ -10,7 +10,6 @@ import { textGradient } from 'src/theme/styles';
 
 export function NavUpgrade({ sx, ...other }: StackProps) {
   return (
-    <Box>
-    </Box>
+    <Box/>
   );
 }
