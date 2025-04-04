@@ -15,12 +15,13 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export type CreditProps = {
-  idcredit: string;
-  applicantperson: string;
-  managingperson: string;
-  faculty: string;
+  idcredit: number;
+  user: number;
+  applicantperson: number;
+  managingperson: number;
   debtamount: number;
-  state: 'Pendiente' | 'Parcial' | 'Pagado';
+  state: 1 | 2 | 3;
+  faculty: number;
 };
 
 type Props = {
@@ -40,18 +41,20 @@ export function CreditoTableRow({ row, selected, onSelectRow }: Props) {
     setOpenPopover(null);
   }, []);
 
-  const renderEstadoColor = (estado: CreditProps['state']) => {
+  const renderEstado = (estado: number) => {
     switch (estado) {
-      case 'Pagado':
-        return 'success';
-      case 'Parcial':
-        return 'warning';
-      case 'Pendiente':
-        return 'error';
+      case 1:
+        return { text: 'Pendiente', color: 'error' };
+      case 2:
+        return { text: 'Parcial', color: 'warning' };
+      case 3:
+        return { text: 'Pagado', color: 'success' };
       default:
-        return 'default';
+        return { text: 'Desconocido', color: 'default' };
     }
   };
+
+  const estado = renderEstado(row.state);
 
   return (
     <>
@@ -62,22 +65,17 @@ export function CreditoTableRow({ row, selected, onSelectRow }: Props) {
 
         <TableCell>{row.idcredit}</TableCell>
 
-        <TableCell>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Iconify icon="mdi:account" width={20} />
-            {row.applicantperson}
-          </Box>
-        </TableCell>
+        <TableCell>{`#${row.applicantperson}`}</TableCell>
 
-        <TableCell>{row.managingperson}</TableCell>
+        <TableCell>{`#${row.managingperson}`}</TableCell>
 
         <TableCell>{`$${row.debtamount.toLocaleString()}`}</TableCell>
 
         <TableCell align="center">
-          <Label color={renderEstadoColor(row.state)}>{row.state}</Label>
+          <Label color={estado.color}>{estado.text}</Label>
         </TableCell>
 
-        <TableCell>{row.faculty}</TableCell>
+        <TableCell>{`#${row.faculty}`}</TableCell>
 
         <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>

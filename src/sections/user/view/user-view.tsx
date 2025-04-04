@@ -9,21 +9,51 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
-import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { TableNoData } from '../table-no-data';
-import { UserTableRow } from '../user-table-row';
+import { CreditoTableRow } from '../credito-table-row';
 import { UserTableHead } from '../user-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 
-import type { UserProps } from '../user-table-row';
+import type { CreditProps } from '../credito-table-row';
 
+// ----------------------------------------------------------------------
+// Datos mock (realistas según tabla de BD)
+const _creditos: CreditProps[] = [
+  {
+    idcredit: 1,
+    user: 2,
+    applicantperson: 15,
+    managingperson: 3,
+    debtamount: 6495,
+    state: 1,
+    faculty: 3,
+  },
+  {
+    idcredit: 2,
+    user: 6,
+    applicantperson: 8,
+    managingperson: 17,
+    debtamount: 29414,
+    state: 3,
+    faculty: 5,
+  },
+  {
+    idcredit: 3,
+    user: 2,
+    applicantperson: 7,
+    managingperson: 14,
+    debtamount: 23372,
+    state: 2,
+    faculty: 3,
+  },
+];
 // ----------------------------------------------------------------------
 
 export function UserView() {
@@ -31,8 +61,8 @@ export function UserView() {
 
   const [filterName, setFilterName] = useState('');
 
-  const dataFiltered: UserProps[] = applyFilter({
-    inputData: _users,
+  const dataFiltered: CreditProps[] = applyFilter({
+    inputData: _creditos,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
   });
@@ -43,14 +73,14 @@ export function UserView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Users
+          Créditos
         </Typography>
         <Button
           variant="contained"
           color="inherit"
           startIcon={<Iconify icon="mingcute:add-line" />}
         >
-          New user
+          Nuevo crédito
         </Button>
       </Box>
 
@@ -70,21 +100,22 @@ export function UserView() {
               <UserTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={_users.length}
+                rowCount={_creditos.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
                 onSelectAllRows={(checked) =>
                   table.onSelectAllRows(
                     checked,
-                    _users.map((user) => user.id)
+                    _creditos.map((credito) => credito.idcredit.toString())
                   )
                 }
                 headLabel={[
-                  { id: 'name', label: 'Name' },
-                  { id: 'company', label: 'Company' },
-                  { id: 'role', label: 'Role' },
-                  { id: 'isVerified', label: 'Verified', align: 'center' },
-                  { id: 'status', label: 'Status' },
+                  { id: 'idcredit', label: 'ID Crédito' },
+                  { id: 'applicantperson', label: 'Solicitante' },
+                  { id: 'managingperson', label: 'Responsable' },
+                  { id: 'debtamount', label: 'Monto' },
+                  { id: 'state', label: 'Estado', align: 'center' },
+                  { id: 'faculty', label: 'Facultad' },
                   { id: '' },
                 ]}
               />
@@ -95,17 +126,17 @@ export function UserView() {
                     table.page * table.rowsPerPage + table.rowsPerPage
                   )
                   .map((row) => (
-                    <UserTableRow
-                      key={row.id}
+                    <CreditoTableRow
+                      key={row.idcredit}
                       row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
+                      selected={table.selected.includes(row.idcredit.toString())}
+                      onSelectRow={() => table.onSelectRow(row.idcredit.toString())}
                     />
                   ))}
 
                 <TableEmptyRows
                   height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, _users.length)}
+                  emptyRows={emptyRows(table.page, table.rowsPerPage, _creditos.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
@@ -117,7 +148,7 @@ export function UserView() {
         <TablePagination
           component="div"
           page={table.page}
-          count={_users.length}
+          count={_creditos.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
@@ -132,7 +163,7 @@ export function UserView() {
 
 export function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('idcredit');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
