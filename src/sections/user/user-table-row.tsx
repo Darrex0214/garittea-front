@@ -23,6 +23,10 @@ export type CreditProps = {
   state: 'Pendiente' | 'Parcial' | 'Pagado';
 };
 
+export type UserProps = {
+  name: string;
+};
+
 type Props = {
   row: CreditProps;
   selected: boolean;

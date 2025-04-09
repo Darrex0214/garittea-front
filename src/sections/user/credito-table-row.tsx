@@ -72,7 +72,7 @@ export function CreditoTableRow({ row, selected, onSelectRow }: Props) {
         <TableCell>{`$${row.debtamount.toLocaleString()}`}</TableCell>
 
         <TableCell align="center">
-          <Label color={estado.color}>{estado.text}</Label>
+          <Label>{estado.text}</Label>
         </TableCell>
 
         <TableCell>{`#${row.faculty}`}</TableCell>
