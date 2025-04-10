@@ -63,6 +63,7 @@ export function HistoryView() {
   */
 
 import React, { useState } from 'react';
+import { alpha } from '@mui/material/styles';
 import {
   Table,
   TableHead,
@@ -82,6 +83,7 @@ import { useQuery } from '@tanstack/react-query';
 import { creditService } from '../../../api/services/creditService';
 import { Credit } from '../../../types/credit';
 
+
 export function HistoryView() {
   const { data: creditData, isPending, isError } = useQuery<Credit[]>({
     queryKey: ['credits'],
@@ -90,16 +92,21 @@ export function HistoryView() {
 
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
 
-  const getEstadoTexto = (estado: number) => {
+  type EstadoInfo = {
+    text: string;
+    color: string;
+  };
+  
+  const getEstadoTexto = (estado: number): EstadoInfo => {
     switch (estado) {
       case 1:
-        return 'Pendiente';
+        return { text: 'Pendiente', color: '#c62828' }; // rojo
       case 2:
-        return 'Aprobado';
+        return { text: 'Parcial', color: '#f9a825' };   // amarillo
       case 3:
-        return 'Rechazado';
+        return { text: 'Pagado', color: '#2e7d32' };    // verde
       default:
-        return 'Desconocido';
+        return { text: 'Desconocido', color: '#757575' }; // gris
     }
   };
 
@@ -153,7 +160,18 @@ export function HistoryView() {
                 <TableCell>{`${credit.user.name} ${credit.user.lastName}`}</TableCell>
                 <TableCell>{`${credit.applicant.name} ${credit.applicant.lastName}`}</TableCell>
                 <TableCell>${credit.debtAmount.toLocaleString()}</TableCell>
-                <TableCell>{getEstadoTexto(credit.state)}</TableCell>
+                <TableCell
+                  sx={{
+                    color: getEstadoTexto(credit.state).color,
+                    fontWeight: 'bold',
+                    backgroundColor: alpha(getEstadoTexto(credit.state).color, 0.15), 
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                  }}
+                >
+                  {getEstadoTexto(credit.state).text}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -171,7 +189,18 @@ export function HistoryView() {
               <Typography><b>Gestor:</b> {selectedCredit.managingPerson ? `${selectedCredit.managingPerson.name} ${selectedCredit.managingPerson.lastName}` : 'Sin asignar'}</Typography>
               <Typography><b>Facultad:</b> {selectedCredit.faculty.name}</Typography>
               <Typography><b>Deuda:</b> ${selectedCredit.debtAmount.toLocaleString()}</Typography>
-              <Typography><b>Estado:</b> {getEstadoTexto(selectedCredit.state)}</Typography>
+              <Typography
+                sx={{
+                  color: getEstadoTexto(selectedCredit.state).color,
+                  backgroundColor: alpha(getEstadoTexto(selectedCredit.state).color, 0.15), 
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  display: 'inline-block',
+                }}
+              >
+                <b>Estado:</b> {getEstadoTexto(selectedCredit.state).text}
+              </Typography>
+
             </>
           )}
         </DialogContent>
