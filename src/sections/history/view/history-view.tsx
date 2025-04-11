@@ -102,7 +102,7 @@ export function HistoryView() {
       case 1:
         return { text: 'Pendiente', color: '#c62828' }; // rojo
       case 2:
-        return { text: 'Parcial', color: '#f9a825' };   // amarillo
+        return { text: 'Nota credito', color: '#f9a825' };   // amarillo
       case 3:
         return { text: 'Pagado', color: '#2e7d32' };    // verde
       default:
