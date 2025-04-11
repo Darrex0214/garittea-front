@@ -18,42 +18,50 @@ import {
   Popover,
   MenuList,
   MenuItem,
-  } from '@mui/material';
+} from '@mui/material';
 import { menuItemClasses } from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { creditService } from '../../../api/services/creditService';
 import { Credit } from '../../../types/credit';
 
-
 export function HistoryView() {
+  const queryClient = useQueryClient();
+
   const { data: creditData, isPending, isError } = useQuery<Credit[]>({
     queryKey: ['credits'],
     queryFn: () => creditService.getAllCredits().then((res) => res.data),
   });
 
-  // Estado para el modal de detalles
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => creditService.deleteCredit(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credits'] });
+    },
+  });
+
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
-  
-  // Estados para el Popover de opciones (tres puntos)
   const [optionAnchorEl, setOptionAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [optionCredit, setOptionCredit] = useState<Credit | null>(null);
 
-  type EstadoInfo = {
-    text: string;
-    color: string;
-  };
-
-  const getEstadoTexto = (estado: number): EstadoInfo => {
+  const getEstadoTexto = (estado: number) => {
     switch (estado) {
       case 1:
-        return { text: 'Pendiente', color: '#c62828' }; // rojo
+        return { text: 'Pendiente', color: '#c62828' };
       case 2:
-        return { text: 'Nota crédito', color: '#f9a825' };   // amarillo
+        return { text: 'Nota crédito', color: '#f9a825' };
       case 3:
-        return { text: 'Pagado', color: '#2e7d32' };    // verde
+        return { text: 'Pagado', color: '#2e7d32' };
       default:
-        return { text: 'Desconocido', color: '#757575' }; // gris
+        return { text: 'Desconocido', color: '#757575' };
+    }
+  };
+
+  const handleDelete = () => {
+    if (optionCredit && window.confirm('¿Estás seguro de que deseas eliminar este crédito?')) {
+      deleteMutation.mutate(optionCredit.id);
+      setOptionAnchorEl(null);
+      setOptionCredit(null);
     }
   };
 
@@ -74,16 +82,7 @@ export function HistoryView() {
       <Typography variant="h5" gutterBottom>
         Historial de Créditos
       </Typography>
-      <TableContainer
-        component={Paper}
-        sx={{
-          width: '90%',
-          maxWidth: '1200px',
-          height: '60vh',
-          overflowY: 'auto',
-          margin: '0 auto',
-        }}
-      >
+      <TableContainer component={Paper} sx={{ width: '90%', maxWidth: '1200px', height: '60vh', overflowY: 'auto', margin: '0 auto' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -119,11 +118,9 @@ export function HistoryView() {
                 >
                   {getEstadoTexto(credit.state).text}
                 </TableCell>
-                {/* Columna de opción: botón de tres puntos */}
                 <TableCell align="right">
                   <IconButton
                     onClick={(e) => {
-                      // Evita que se dispare el onClick del row (abrir el modal)
                       e.stopPropagation();
                       setOptionCredit(credit);
                       setOptionAnchorEl(e.currentTarget);
@@ -138,7 +135,7 @@ export function HistoryView() {
         </Table>
       </TableContainer>
 
-      {/* Popover de opciones (Editar / Eliminar) */}
+      {/* Popover */}
       <Popover
         open={Boolean(optionAnchorEl)}
         anchorEl={optionAnchorEl}
@@ -166,22 +163,15 @@ export function HistoryView() {
         >
           <MenuItem
             onClick={() => {
-              // Aquí agrega la lógica para editar el crédito (opción: abrir modal de edición, redirigir, etc.)
               setOptionAnchorEl(null);
               setOptionCredit(null);
+              // Lógica para editar (si aplica)
             }}
           >
             <Iconify icon="solar:pen-bold" />
             Editar
           </MenuItem>
-          <MenuItem
-            onClick={() => {
-              // Aquí agrega la lógica para eliminar el crédito (opción: llamar API de DELETE, mostrar confirmación, etc.)
-              setOptionAnchorEl(null);
-              setOptionCredit(null);
-            }}
-            sx={{ color: 'error.main' }}
-          >
+          <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:trash-bin-trash-bold" />
             Eliminar
           </MenuItem>

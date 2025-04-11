@@ -11,6 +11,7 @@ export const creditService = {
   getAllCredits: () => api.get(endpoints.credits),
   getCreditById: (id: string) => api.get(endpoints.creditById(id)),
   createCredit: (data: any) => api.post(endpoints.credits, data),
+  deleteCredit: (id: number) => api.delete(`/credits/${id}`),
 };
 
 export const useGetCredits = () => useQuery({
