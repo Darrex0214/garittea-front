@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
+import dayjs, { Dayjs } from 'dayjs';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -19,6 +20,7 @@ import Container from '@mui/material/Container';
 import CircularProgress from '@mui/material/CircularProgress';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -53,12 +55,15 @@ const getStateLabel = (state: number): string => {
   }
 };
 
+const formatDate = (date: Date) => dayjs(date).format('DD/MM/YYYY');
+
 export default function ReportGenerator() {
   const location = useLocation();
   const { reportType } = location.state || { reportType: 'creditReport' };
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<Credit[]>([]);
   const [selectedState, setSelectedState] = useState<number>(0);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
 
   const { data: creditsData, isLoading } = useGetCredits();
 
@@ -69,10 +74,14 @@ export default function ReportGenerator() {
     }
   }, [creditsData]);
 
-  const filteredCredits = useMemo(() => {
-    if (selectedState === 0) return credits;
-    return credits.filter((credit) => credit.state === selectedState);
-  }, [credits, selectedState]);
+  const filteredCredits = useMemo(
+    () => credits.filter((credit) => {
+      const stateMatch = selectedState === 0 || credit.state === selectedState;
+      const dateMatch = !selectedDate || dayjs(credit.createdAt).isSame(selectedDate, 'day');
+      return stateMatch && dateMatch;
+    }),
+    [credits, selectedState, selectedDate]
+  );
 
   const calculateFacultyStats = () => {
     const facultyStats = credits.reduce((acc, credit) => {
@@ -143,19 +152,32 @@ export default function ReportGenerator() {
                       <Typography variant="h6" sx={{ mb: 2 }}>
                         Reporte Mensual de Créditos
                       </Typography>
-                      <TextField
-                        select
-                        label="Filtrar por estado"
-                        value={selectedState}
-                        onChange={(e) => setSelectedState(Number(e.target.value))}
-                        sx={{ minWidth: 200 }}
-                      >
-                        {stateOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                          select
+                          label="Filtrar por estado"
+                          value={selectedState}
+                          onChange={(e) => setSelectedState(Number(e.target.value))}
+                          sx={{ minWidth: 200 }}
+                        >
+                          {stateOptions.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                        <DatePicker
+                          label="Filtrar por fecha"
+                          value={selectedDate}
+                          onChange={(newValue) => setSelectedDate(newValue)}
+                          format="DD/MM/YYYY"
+                          slotProps={{
+                            textField: {
+                              sx: { minWidth: 200 },
+                            },
+                          }}
+                        />
+                      </Box>
                     </Box>
                     <Suspense fallback={<Button variant="contained" disabled>Cargando PDF...</Button>}>
                       <PDFDownloadLink
@@ -186,6 +208,7 @@ export default function ReportGenerator() {
                           <TableCell>Solicitante</TableCell>
                           <TableCell align="right">Deuda</TableCell>
                           <TableCell>Estado</TableCell>
+                          <TableCell>Fecha de Creación</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -196,6 +219,7 @@ export default function ReportGenerator() {
                             <TableCell>{credit.applicant.name}</TableCell>
                             <TableCell align="right">${credit.debtAmount.toLocaleString()}</TableCell>
                             <TableCell>{getStateLabel(credit.state)}</TableCell>
+                            <TableCell>{formatDate(credit.createdAt)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

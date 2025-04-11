@@ -20,5 +20,6 @@ export type Credit = {
     name: string;
   };
   debtAmount: number;
+  createdAt: Date;
   state: number;
 }

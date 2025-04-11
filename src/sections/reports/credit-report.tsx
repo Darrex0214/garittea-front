@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { Credit } from 'src/types/credit';
+import dayjs from 'dayjs';
 
 // ----------------------------------------------------------------------
 
@@ -56,18 +57,21 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
   columnId: {
-    width: '10%',
+    width: '8%',
   },
   columnUser: {
-    width: '25%',
-  },
-  columnApplicant: {
-    width: '25%',
-  },
-  columnDebt: {
     width: '20%',
   },
+  columnApplicant: {
+    width: '20%',
+  },
+  columnDebt: {
+    width: '17%',
+  },
   columnState: {
+    width: '15%',
+  },
+  columnDate: {
     width: '20%',
   },
   text: {
@@ -85,6 +89,8 @@ const styles = StyleSheet.create({
 });
 
 // ----------------------------------------------------------------------
+
+const formatDate = (date: Date) => dayjs(date).format('DD/MM/YYYY');
 
 type CreditReportProps = {
   credits: Credit[];
@@ -113,8 +119,11 @@ export function CreditReport({ credits, currentDate, getStateLabel }: CreditRepo
             <View style={[styles.column, styles.columnDebt]}>
               <Text style={[styles.headerText, styles.textRight]}>Deuda</Text>
             </View>
-            <View style={[styles.column, styles.columnState, styles.columnLast]}>
+            <View style={[styles.column, styles.columnState]}>
               <Text style={styles.headerText}>Estado</Text>
+            </View>
+            <View style={[styles.column, styles.columnDate, styles.columnLast]}>
+              <Text style={styles.headerText}>Fecha de Creación</Text>
             </View>
           </View>
 
@@ -132,8 +141,11 @@ export function CreditReport({ credits, currentDate, getStateLabel }: CreditRepo
               <View style={[styles.column, styles.columnDebt]}>
                 <Text style={[styles.text, styles.textRight]}>${credit.debtAmount.toLocaleString()}</Text>
               </View>
-              <View style={[styles.column, styles.columnState, styles.columnLast]}>
+              <View style={[styles.column, styles.columnState]}>
                 <Text style={styles.text}>{getStateLabel(credit.state)}</Text>
+              </View>
+              <View style={[styles.column, styles.columnDate, styles.columnLast]}>
+                <Text style={styles.text}>{formatDate(credit.createdAt)}</Text>
               </View>
             </View>
           ))}

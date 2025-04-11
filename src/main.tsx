@@ -3,6 +3,9 @@ import { Suspense, StrictMode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/es';
 
 import App from './app';
 
@@ -16,11 +19,13 @@ root.render(
     <QueryClientProvider client={queryClient}>
     <StrictMode>
         <HelmetProvider>
-          <BrowserRouter>
-            <Suspense>
-              <App />
-            </Suspense>
-          </BrowserRouter>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+            <BrowserRouter>
+              <Suspense>
+                <App />
+              </Suspense>
+            </BrowserRouter>
+          </LocalizationProvider>
         </HelmetProvider>
       </StrictMode>
     </QueryClientProvider>

@@ -49,7 +49,7 @@ export function BlogView() {
               <Box sx={{ p: 3, display: 'flex', alignItems: 'center' }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 2 }}>
                   <Iconify icon="solar:chart-pie-bold" width={48} sx={{ color: 'primary.main', mb: 1 }} />
-                  <Iconify icon="solar:chart-square-bold" width={32} sx={{ color: 'info.main' }} />
+                  <Iconify icon="solar:chart-square-bold" width={64} sx={{ color: 'info.main' }} />
                 </Box>
                 <Box>
                   <Typography gutterBottom variant="h5" component="div">
