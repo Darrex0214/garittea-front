@@ -2,7 +2,8 @@ import { Helmet } from 'react-helmet-async';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
-
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -28,6 +29,10 @@ import { Credit } from 'src/types/credit';
 import { useGetCredits } from 'src/api/services/creditService';
 import { CreditReport } from 'src/sections/reports/credit-report';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics-current-visits';
+
+// Registrando los plugins de dayjs
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 // ----------------------------------------------------------------------
 
@@ -63,7 +68,8 @@ export default function ReportGenerator() {
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<Credit[]>([]);
   const [selectedState, setSelectedState] = useState<number>(0);
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
 
   const { data: creditsData, isLoading } = useGetCredits();
 
@@ -77,10 +83,13 @@ export default function ReportGenerator() {
   const filteredCredits = useMemo(
     () => credits.filter((credit) => {
       const stateMatch = selectedState === 0 || credit.state === selectedState;
-      const dateMatch = !selectedDate || dayjs(credit.createdAt).isSame(selectedDate, 'day');
+      const creditDate = dayjs(credit.createdAt);
+      const dateMatch = 
+        (!startDate || creditDate.isSameOrAfter(startDate, 'day')) &&
+        (!endDate || creditDate.isSameOrBefore(endDate, 'day'));
       return stateMatch && dateMatch;
     }),
-    [credits, selectedState, selectedDate]
+    [credits, selectedState, startDate, endDate]
   );
 
   const calculateFacultyStats = () => {
@@ -167,9 +176,20 @@ export default function ReportGenerator() {
                           ))}
                         </TextField>
                         <DatePicker
-                          label="Filtrar por fecha"
-                          value={selectedDate}
-                          onChange={(newValue) => setSelectedDate(newValue)}
+                          label="Fecha inicial"
+                          value={startDate}
+                          onChange={(newValue) => setStartDate(newValue)}
+                          format="DD/MM/YYYY"
+                          slotProps={{
+                            textField: {
+                              sx: { minWidth: 200 },
+                            },
+                          }}
+                        />
+                        <DatePicker
+                          label="Fecha final"
+                          value={endDate}
+                          onChange={(newValue) => setEndDate(newValue)}
                           format="DD/MM/YYYY"
                           slotProps={{
                             textField: {
