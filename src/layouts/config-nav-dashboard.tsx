@@ -20,7 +20,7 @@ export const navData = [
   },
   {
     title: 'Créditos',
-    path: '/products',
+    path: '/creditos',
     icon: icon('ic-cart'),
     info: (
       <Label color="error" variant="inverted">
@@ -30,7 +30,7 @@ export const navData = [
   },
   {
     title: 'Reportes',
-    path: '/blog',
+    path: '/reportes',
     icon: icon('ic-blog'),
   },
   {
