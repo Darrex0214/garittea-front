@@ -20,12 +20,17 @@ export const navData = [
   },
   {
     title: 'Créditos',
-    path: '/products',
-    icon: icon('ic-cart')
+    path: '/creditos',
+    icon: icon('ic-cart'),
+  },
+  {
+    title: 'Notas Crédito',
+    path: '/notas-credito',
+    icon: icon('ic-lock'),
   },
   {
     title: 'Reportes',
-    path: '/blog',
+    path: '/reportes',
     icon: icon('ic-blog'),
   }
 ];
