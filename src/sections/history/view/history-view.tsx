@@ -18,6 +18,7 @@ import {
   Popover,
   MenuList,
   MenuItem,
+  Button
 } from '@mui/material';
 import { menuItemClasses } from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
@@ -25,6 +26,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { creditService } from '../../../api/services/creditService';
 import { Credit } from '../../../types/credit';
 import { PaginationComponent } from '../../../components/pagination/pagination';
+import { SearchFilterModal } from '../../../components/filter/creditFilter';
 
 export function HistoryView() {
   const queryClient = useQueryClient();
@@ -46,11 +48,23 @@ export function HistoryView() {
   const [optionCredit, setOptionCredit] = useState<Credit | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [filters, setFilters] = useState({ faculty: '', estado: '' });
+
+  // Filtrado de créditos según búsqueda
+  const filteredCredits = creditData
+    ? creditData.filter(credit =>
+        (filters.faculty
+          ? credit.faculty.name.toLowerCase().includes(filters.faculty.toLowerCase())
+          : true) &&
+        (filters.estado
+          ? getEstadoTexto(credit.state).text.toLowerCase().includes(filters.estado.toLowerCase())
+          : true)
+      )
+    : [];
 
   // Paginación: Se obtiene el subconjunto de datos a mostrar
-  const displayData = creditData
-    ? creditData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-    : [];
+  const displayData = filteredCredits.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   // Handlers de paginación
   const handleChangePage = (
@@ -108,7 +122,6 @@ export function HistoryView() {
           </TableRow>
         </TableHead>
         <TableBody>
-
           {displayData.map((credit, index) => (
             <TableRow
               key={credit.id}
@@ -182,7 +195,7 @@ export function HistoryView() {
           onClick={() => {
             setOptionAnchorEl(null);
             setOptionCredit(null);
-            // Aquí pondrías la lógica para editar si es necesaria
+            // Lógica para editar, si fuera necesario
           }}
         >
           <Iconify icon="solar:pen-bold" />
@@ -256,13 +269,34 @@ export function HistoryView() {
       <Typography variant="h5" sx={{ margin: '10px' }} gutterBottom>
         Historial de Créditos
       </Typography>
+
+      {/* Botón para abrir el modal de búsqueda */}
+      <Box display="flex" justifyContent="flex-start" mb={2} marginLeft="80px">
+        <Button variant="outlined" onClick={() => setSearchModalOpen(true)}>
+          Buscar Créditos
+        </Button>
+      </Box>
+
+      <SearchFilterModal
+        open={searchModalOpen}
+        initialFilters={filters}
+        onClose={() => setSearchModalOpen(false)}
+        onSearch={(newFilters) => {
+          setFilters({
+            faculty: newFilters.faculty ?? '',
+            estado: newFilters.estado ?? '',
+          });
+          setPage(0);
+        }}
+      />
+
       {renderTable()}
       <PaginationComponent
-        count={creditData ? creditData.length : 0}
+        count={filteredCredits.length}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage} 
+        onRowsPerPageChange={handleChangeRowsPerPage}
       />
       {renderPopover()}
       {renderCreditModal()}

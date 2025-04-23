@@ -1,4 +1,3 @@
-// src/api/services/creditService.ts
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Credit } from 'src/types/credit';
@@ -12,6 +11,8 @@ export const creditService = {
   getCreditById: (id: string) => api.get(endpoints.creditById(id)),
   createCredit: (data: any) => api.post(endpoints.credits, data),
   deleteCredit: (id: number) => api.delete(`/credits/${id}`),
+  searchCredits: (filters: { faculty: string; estado: string }) =>
+    axios.get<Credit[]>(`${API_URL}/credits`, { params: filters }),
 };
 
 export const useGetCredits = () => useQuery({
