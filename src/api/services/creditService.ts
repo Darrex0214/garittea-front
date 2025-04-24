@@ -1,24 +1,38 @@
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+// src/api/services/creditService.ts
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Credit } from 'src/types/credit';
-import { api } from '../client';
 import { endpoints } from '../endpoints';
+import { api } from '../client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Define un tipo para los datos que se envían al crear un crédito
+interface CreateCreditPayload {
+  userId: number;
+  applicantId: number;
+  managingPersonId: number | null; // Puede ser null según tu backend
+  facultyId: number;
+  debtAmount: number;
+}
 
 export const creditService = {
-  getAllCredits: () => api.get(endpoints.credits),
-  getCreditById: (id: string) => api.get(endpoints.creditById(id)),
-  createCredit: (data: any) => api.post(endpoints.credits, data),
-  deleteCredit: (id: number) => api.delete(`/credits/${id}`),
+  getAllCredits: () => api.get<Credit[]>(endpoints.credits), // Devuelve la promesa directamente
+  getCreditById: (id: string) => api.get<Credit>(endpoints.creditById(id)).then(res => res.data),
+  createCredit: (data: CreateCreditPayload) =>
+    api.post<Credit>(endpoints.credits, data).then(res => res.data),
+  deleteCredit: (id: number) => api.delete(`/credits/${id}`).then(res => res.data),
   searchCredits: (filters: { faculty: string; estado: string }) =>
-    axios.get<Credit[]>(`${API_URL}/credits`, { params: filters }),
+    api.get<Credit[]>(endpoints.credits, { params: filters }).then(res => res.data),
 };
+
+export const useCreateCredit = () => useMutation({
+  mutationFn: (creditData: CreateCreditPayload) =>
+    creditService.createCredit(creditData),
+  // Opcional: Puedes agregar `onSuccess`, `onError`, etc.
+});
 
 export const useGetCredits = () => useQuery({
   queryKey: ['credits'],
   queryFn: async () => {
-    const response = await axios.get<Credit[]>(`${API_URL}/credits`);
-    return response.data;
+    const response = await api.get<Credit[]>(endpoints.credits);
+    return response.data; // Extrae la data aquí en el hook
   },
 });
