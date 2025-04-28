@@ -39,8 +39,18 @@ export function HistoryView() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => creditService.deleteCredit(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credits'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credits'] });
+    },
+    onError: (error: any) => {
+      if (error.response && error.response.data && error.response.data.error) {
+        alert(error.response.data.error); 
+      } else {
+        alert('Ocurrió un error al eliminar el crédito. Intente nuevamente.');
+      }
+    },
   });
+  
 
   // Estados para el componente
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
