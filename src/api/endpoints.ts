@@ -6,4 +6,5 @@ export const endpoints = {
   creditByFacultyAndState: (faculty: string, state: string) =>
     `/credits/faculty?faculty=${faculty}&state=${state}`,
   // Add others like users, auth, etc.
+  updateCreditById: (id: string) => `/credits/${id}`, // Nuevo endpoint
 }

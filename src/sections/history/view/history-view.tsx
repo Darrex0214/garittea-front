@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles';
 import {
   Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper,
   Dialog, DialogTitle, DialogContent, Typography, CircularProgress, Box,
-  IconButton, Popover, MenuList, MenuItem, Button
+  IconButton, Popover, MenuList, MenuItem, Button, TextField, Select
 } from '@mui/material';
 import { menuItemClasses } from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
@@ -25,6 +25,7 @@ export function HistoryView() {
   const [filters, setFilters] = useState({ faculty: '', estado: '' });
   // Estados de modales
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState('');
 
@@ -52,6 +53,22 @@ export function HistoryView() {
     },
     onError: (error: any) => {
       let message = 'Ocurrió un error al eliminar el crédito. Intente nuevamente.';
+      if (error.response && error.response.data && error.response.data.error) {
+        message = error.response.data.error;
+      }
+      setErrorModalMessage(message);
+      setErrorModalOpen(true);
+    },
+  });
+  
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Credit> }) =>
+      creditService.updateCreditById(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credits'] }); // Refresca los datos de la tabla
+    },
+    onError: (error: any) => {
+      let message = 'Ocurrió un error al actualizar el crédito. Intente nuevamente.';
       if (error.response && error.response.data && error.response.data.error) {
         message = error.response.data.error;
       }
@@ -163,9 +180,15 @@ export function HistoryView() {
       anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
       transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
       <MenuList sx={{ p: 0.5, gap: 0.5, width: 140, display: 'flex', flexDirection: 'column', [`& .${menuItemClasses.root}`]: { px: 1, gap: 2, borderRadius: 0.75, [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' } } }}>
-        <MenuItem onClick={() => { setOptionAnchorEl(null); setOptionCredit(null); }}>
-          <Iconify icon="solar:pen-bold" />Editar
-        </MenuItem>
+      <MenuItem
+        onClick={() => {
+          setOptionAnchorEl(null);
+          setEditModalOpen(true);
+        }}
+      >
+        <Iconify icon="solar:pen-bold" />
+        Editar
+      </MenuItem>
         <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
           <Iconify icon="solar:trash-bin-trash-bold" />Eliminar
         </MenuItem>
@@ -193,6 +216,89 @@ export function HistoryView() {
     </Dialog>
   );
 
+
+  const renderEditModal = () => (
+    <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
+      <DialogTitle>Editar Crédito</DialogTitle>
+      <DialogContent
+        dividers
+        sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 300 }}
+      >
+        {optionCredit && (
+          <>
+            <Typography>ID: {optionCredit.id}</Typography>
+  
+            {/* Campo para editar monto */}
+            <TextField
+              type="number"
+              label="Nuevo Monto"
+              value={optionCredit?.debtAmount ?? ''}
+              onChange={(e) =>
+                setOptionCredit((prev) =>
+                  prev ? { ...prev, debtAmount: parseFloat(e.target.value) } : null
+                )
+              }
+              fullWidth
+              size="small"
+              margin="normal"
+              InputProps={{
+                sx: {
+                  borderRadius: 2,
+                },
+              }}
+            />
+  
+            {/* Campo para editar estado */}
+            <Select
+              label="Estado"
+              value={optionCredit.state}
+              onChange={(e) =>
+                setOptionCredit((prev) =>
+                  prev ? { ...prev, state: Number(e.target.value) } : null
+                )
+              }
+              fullWidth
+              size="small"
+              displayEmpty
+              sx={{ mt: 2, borderRadius: 2 }}
+            >
+              <MenuItem value={1}>Pendiente</MenuItem>
+              <MenuItem value={2}>Nota Crédito</MenuItem>
+              <MenuItem value={3}>Pagado</MenuItem>
+            </Select>
+  
+            {/* Botones */}
+            <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
+              <Button variant="outlined" onClick={() => setEditModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                  if (optionCredit) {
+                    updateMutation.mutate({
+                      id: optionCredit.id.toString(),
+                      data: {
+                        debtAmount: optionCredit.debtAmount,
+                        state: optionCredit.state,
+                      },
+                    });
+                    setEditModalOpen(false);
+                    setOptionCredit(null);
+                  }
+                }}
+              >
+                Guardar
+              </Button>
+            </Box>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+  
+  
   const renderErrorModal = () => (
     <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
       <DialogTitle sx={{ color: 'error.main' }}>Error</DialogTitle>
@@ -247,7 +353,7 @@ export function HistoryView() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      
+      {renderEditModal()}
       {renderPopover()}
       {renderCreditModal()}
       {renderErrorModal()}
