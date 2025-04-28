@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles';
 import {
   Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper,
   Dialog, DialogTitle, DialogContent, Typography, CircularProgress, Box,
-  IconButton, Popover, MenuList, MenuItem, Button, TextField 
+  IconButton, Popover, MenuList, MenuItem, Button, TextField, Select
 } from '@mui/material';
 import { menuItemClasses } from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
@@ -215,32 +215,63 @@ export function HistoryView() {
       </DialogContent>
     </Dialog>
   );
+
+
   const renderEditModal = () => (
     <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
       <DialogTitle>Editar Crédito</DialogTitle>
-      <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 300 }}>
+      <DialogContent
+        dividers
+        sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 300 }}
+      >
         {optionCredit && (
           <>
             <Typography>ID: {optionCredit.id}</Typography>
-            
-            {/* Solo editable el monto por ahora */}
-            <Typography>Nuevo Monto:</Typography>
+  
+            {/* Campo para editar monto */}
             <TextField
               type="number"
               label="Nuevo Monto"
               value={optionCredit?.debtAmount ?? ''}
-              onChange={(e) => setOptionCredit((prev) => prev ? { ...prev, debtAmount: parseFloat(e.target.value) } : null)}
+              onChange={(e) =>
+                setOptionCredit((prev) =>
+                  prev ? { ...prev, debtAmount: parseFloat(e.target.value) } : null
+                )
+              }
               fullWidth
               size="small"
               margin="normal"
               InputProps={{
                 sx: {
-                  borderRadius: 2, // Bordes redondeados suaves
+                  borderRadius: 2,
                 },
               }}
             />
+  
+            {/* Campo para editar estado */}
+            <Select
+              label="Estado"
+              value={optionCredit.state}
+              onChange={(e) =>
+                setOptionCredit((prev) =>
+                  prev ? { ...prev, state: Number(e.target.value) } : null
+                )
+              }
+              fullWidth
+              size="small"
+              displayEmpty
+              sx={{ mt: 2, borderRadius: 2 }}
+            >
+              <MenuItem value={1}>Pendiente</MenuItem>
+              <MenuItem value={2}>Nota Crédito</MenuItem>
+              <MenuItem value={3}>Pagado</MenuItem>
+            </Select>
+  
+            {/* Botones */}
             <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
-              <Button variant="outlined" onClick={() => setEditModalOpen(false)}>Cancelar</Button>
+              <Button variant="outlined" onClick={() => setEditModalOpen(false)}>
+                Cancelar
+              </Button>
               <Button
                 variant="contained"
                 color="primary"
@@ -250,6 +281,7 @@ export function HistoryView() {
                       id: optionCredit.id.toString(),
                       data: {
                         debtAmount: optionCredit.debtAmount,
+                        state: optionCredit.state,
                       },
                     });
                     setEditModalOpen(false);
@@ -265,6 +297,7 @@ export function HistoryView() {
       </DialogContent>
     </Dialog>
   );
+  
   
   const renderErrorModal = () => (
     <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
