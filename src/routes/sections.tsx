@@ -45,8 +45,10 @@ export function Router() {
       ),
       children: [
         { element: <HomePage />, index: true },
-        { path: 'historial', element: <HistoryPage /> },
-        { path: 'creditos', element: <CreditPage /> },
+        { path: 'personas', element: <HomePage /> },
+        { path: 'facultades', element: <HomePage /> },
+        { path: 'creditos', element: <HistoryPage /> },
+        { path: 'creacion-creditos', element: <CreditPage /> },
         { path: 'notas-credito', element: <NoteCreditPage /> },
         { path: 'reportes', element: <BlogPage /> },
         { path: 'report-generator', element: <ReportGeneratorPage /> },

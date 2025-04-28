@@ -40,7 +40,7 @@ export const FacultySelect: React.FC<FacultySelectProps> = ({ value, onChange })
           <em>Todas</em>
         </MenuItem>
         {faculties.map((faculty) => (
-          <MenuItem key={faculty.id} value={faculty.name}>
+          <MenuItem key={faculty.id} value={String(faculty.id)}>
             {faculty.name}
           </MenuItem>
         ))}

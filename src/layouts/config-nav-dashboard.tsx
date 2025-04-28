@@ -1,3 +1,4 @@
+import path from 'path';
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
@@ -14,13 +15,23 @@ export const navData = [
     icon: icon('ic-analytics'),
   },
   {
-    title: 'Historial',
-    path: '/historial',
+    title: 'Personas',
+    path: '/personas',
     icon: icon('ic-user'),
+  },
+  {
+    title: 'Facultades',
+    path: '/facultades',
+    icon: icon('ic-faculties'),
   },
   {
     title: 'Créditos',
     path: '/creditos',
+    icon: icon('ic-book'),
+  },
+  {
+    title: 'Creación Créditos',
+    path: '/creacion-creditos',
     icon: icon('ic-cart'),
   },
   {

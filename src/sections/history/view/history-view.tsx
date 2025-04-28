@@ -30,10 +30,19 @@ export function HistoryView() {
 
   const queryClient = useQueryClient();
 
-  // Consultas y mutaciones
+// Consulta que se actualiza según los filtros
   const { data: creditData, isPending, isError } = useQuery<Credit[]>({
-    queryKey: ['credits'],
-    queryFn: () => creditService.getAllCredits().then((res) => res.data),
+    queryKey: ['credits', filters],
+    queryFn: () => {
+      if (filters.faculty || filters.estado) {
+        return creditService
+          .getCreditsByFacultyAndState(filters.faculty, filters.estado)
+          .then((res) => res.data);
+      }
+      return creditService
+        .getAllCredits()
+        .then((res) => res.data);
+    },
   });
 
   const deleteMutation = useMutation({
