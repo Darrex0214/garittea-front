@@ -2,7 +2,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Credit } from 'src/types/credit';
 import { endpoints } from '../endpoints';
-import { api } from '../client';
+import api from '../client';
 
 // Define un tipo para los datos que se envían al crear un crédito
 interface CreateCreditPayload {

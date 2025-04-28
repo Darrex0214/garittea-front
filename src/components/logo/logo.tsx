@@ -1,12 +1,9 @@
 import type { BoxProps } from '@mui/material/Box';
-
+import { useLocation } from 'react-router-dom';
 import { useId, forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
-
 import { RouterLink } from 'src/routes/components';
-
 import { logoClasses } from './classes';
 
 // ----------------------------------------------------------------------
@@ -19,21 +16,10 @@ export type LogoProps = BoxProps & {
 
 export const Logo = forwardRef<HTMLDivElement, LogoProps>(
   (
-    { width, href = '/', height, isSingle = true, disableLink = false, className, sx, ...other },
+    { width, href = '/home', height, isSingle = true, disableLink = false, className, sx, ...other },
     ref
   ) => {
-    const theme = useTheme();
 
-    const gradientId = useId();
-
-    const TEXT_PRIMARY = theme.vars.palette.text.primary;
-    const PRIMARY_LIGHT = theme.vars.palette.primary.light;
-    const PRIMARY_MAIN = theme.vars.palette.primary.main;
-    const PRIMARY_DARKER = theme.vars.palette.primary.dark;
-
-    /*
-     * Using local (public folder)
-     */
     const singleLogo = (
       <Box
         alt="Single logo"

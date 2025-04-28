@@ -7,6 +7,9 @@ import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgr
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
+import { SignInView } from 'src/sections/auth';
+import { PrivateRoute } from './components/privateRoute';
+
 
 // ----------------------------------------------------------------------
 
@@ -36,31 +39,42 @@ const renderFallback = (
 export function Router() {
   return useRoutes([
     {
+      path: '/',
       element: (
-        <DashboardLayout>
+        <AuthLayout>
           <Suspense fallback={renderFallback}>
             <Outlet />
           </Suspense>
-        </DashboardLayout>
+        </AuthLayout>
       ),
       children: [
-        { element: <HomePage />, index: true },
-        { path: 'personas', element: <HomePage /> },
-        { path: 'facultades', element: <HomePage /> },
-        { path: 'creditos', element: <HistoryPage /> },
-        { path: 'creacion-creditos', element: <CreditPage /> },
-        { path: 'notas-credito', element: <NoteCreditPage /> },
-        { path: 'reportes', element: <BlogPage /> },
-        { path: 'report-generator', element: <ReportGeneratorPage /> },
+        { index: true, element: <SignInView /> },
+        { path: 'sign-in', element: <SignInView /> },
       ],
     },
     {
-      path: '404',
-      element: <Page404 />,
+      path: '/home',
+      element: (
+        <PrivateRoute>
+          <DashboardLayout>
+            <Suspense fallback={renderFallback}>
+              <Outlet />
+            </Suspense>
+          </DashboardLayout>
+        </PrivateRoute>
+      ),
+      children: [
+        { index: true, element: <HomePage /> },   
+        { path: 'personas', element: <HomePage /> },       
+        { path: 'facultades', element: <HomePage /> },   
+        { path: 'creditos', element: <HistoryPage /> },       
+        { path: 'creacion-creditos', element: <CreditPage />},
+        { path: 'notas-credito', element: <NoteCreditPage />},
+        { path: 'reportes', element: <BlogPage />},
+        { path: 'report-generator', element: <ReportGeneratorPage />},
+      ],
     },
-    {
-      path: '*',
-      element: <Navigate to="/404" replace />,
-    },
+    { path: '404', element: <Page404 /> },
+    { path: '*', element: <Navigate to="/404" replace /> },
   ]);
 }

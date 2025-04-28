@@ -1,25 +1,18 @@
-
-import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
-
 import { useEffect } from 'react';
-
+import { useTheme } from '@mui/material/styles'; 
+import { useNavigate, useLocation } from 'react-router-dom';
+import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import ListItem from '@mui/material/ListItem';
-import { useTheme } from '@mui/material/styles';
-import ListItemButton from '@mui/material/ListItemButton';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
 
 import { usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
-
 import { varAlpha } from 'src/theme/styles';
-
 import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
-
 import { NavUpgrade } from '../components/nav-upgrade';
-
-// ----------------------------------------------------------------------
 
 export type NavContentProps = {
   data: {
@@ -27,6 +20,7 @@ export type NavContentProps = {
     title: string;
     icon: React.ReactNode;
     info?: React.ReactNode;
+    onClick?: () => void;
   }[];
   slots?: {
     topArea?: React.ReactNode;
@@ -67,28 +61,24 @@ export function NavDesktop({
         ...sx,
       }}
     >
-      <NavContent data={data} slots={slots} />
+      <NavContent data={data} slots={slots} sx={sx} />
     </Box>
   );
 }
-
-// ----------------------------------------------------------------------
 
 export function NavMobile({
   sx,
   data,
   open,
-  slots,
   onClose,
+  slots,
 }: NavContentProps & { open: boolean; onClose: () => void }) {
-  const pathname = usePathname();
+  const pathname = useLocation().pathname;
 
+  // cierra el drawer automáticamente cuando cambia la ruta
   useEffect(() => {
-    if (open) {
-      onClose();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    if (open) onClose();
+  }, [open, onClose, pathname]);
 
   return (
     <Drawer
@@ -105,14 +95,13 @@ export function NavMobile({
         },
       }}
     >
-      <NavContent data={data} slots={slots} />
+      <NavContent data={data} slots={slots} sx={sx} />
     </Drawer>
   );
 }
 
-// ----------------------------------------------------------------------
-
 export function NavContent({ data, slots, sx }: NavContentProps) {
+  const navigate = useNavigate();
   const pathname = usePathname();
 
   return (
@@ -127,12 +116,18 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
             {data.map((item) => {
               const isActived = item.path === pathname;
 
+              const handleClick = () => {
+                if (item.onClick) item.onClick();
+                navigate(item.path);
+              };
+
               return (
                 <ListItem disableGutters disablePadding key={item.title}>
                   <ListItemButton
                     disableGutters
-                    component={RouterLink}
-                    href={item.path}
+                    component={item.onClick ? 'button' : RouterLink as any}
+                    href={item.onClick ? undefined : item.path}
+                    onClick={handleClick}
                     sx={{
                       pl: 2,
                       py: 1,
@@ -156,12 +151,10 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
                     <Box component="span" sx={{ width: 24, height: 24 }}>
                       {item.icon}
                     </Box>
-
                     <Box component="span" flexGrow={1}>
                       {item.title}
                     </Box>
-
-                    {item.info && item.info}
+                    {item.info}
                   </ListItemButton>
                 </ListItem>
               );

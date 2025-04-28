@@ -1,5 +1,5 @@
 // src/api/credit.ts
-import { api } from './client'
+import api from './client'
 import { endpoints } from './endpoints'
 
 export const createCredit = async (creditData: {

@@ -1,7 +1,7 @@
 // src/api/services/creditNoteService.ts
 import { useQuery } from '@tanstack/react-query';
 import { CreditNote } from 'src/types/creditNote'; // Mueve esta importación arriba
-import { api } from '../client';
+import api from '../client';
 import { endpoints } from '../endpoints';
 
 export const creditNoteService = {
