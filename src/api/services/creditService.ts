@@ -23,6 +23,8 @@ export const creditService = {
     api.get<Credit[]>(endpoints.credits, { params: filters }).then(res => res.data),
   getCreditsByFacultyAndState: (faculty: string, estado: string) => 
     api.get(endpoints.creditByFacultyAndState(faculty, estado)),
+  updateCreditById: (id: string, data: Partial<Credit>) =>
+    api.patch<Credit>(endpoints.updateCreditById(id), data).then((res) => res.data),
 };
 
 export const useCreateCredit = () => useMutation({
