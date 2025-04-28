@@ -12,11 +12,6 @@ import {
   AutocompleteRenderInputParams,
 } from '@mui/material';
 import { useCreateCredit } from 'src/api/services/creditService';
-// Importa los hooks para obtener todas las opciones
-import { useGetUsers } from 'src/api/services/userService'; // Asegúrate de crear este servicio y hook
-import { useGetApplicants } from 'src/api/services/applicantService'; // Asegúrate de crear este servicio y hook
-import { useGetManagingPersons } from 'src/api/services/managingPersonService'; // Asegúrate de crear este servicio y hook
-import { useGetFaculties } from 'src/api/services/facultyService'; // Asegúrate de crear este servicio y hook
 
 interface FormData {
   userId: string;
@@ -42,33 +37,11 @@ export function CreateCreditView() {
   });
   const { mutate: createCredit, isPending, isSuccess, isError, data: createdCredit, error } = useCreateCredit();
 
-  // Estados para las opciones de selección
-  const { data: usersData, isLoading: isUsersLoading, isError: isUsersError } = useGetUsers();
-  const [usersOptions, setUsersOptions] = useState<Option[]>([]);
-
-  const { data: applicantsData, isLoading: isApplicantsLoading, isError: isApplicantsError } = useGetApplicants();
-  const [applicantsOptions, setApplicantsOptions] = useState<Option[]>([]);
-
-  const { data: managingPersonsData, isLoading: isManagingPersonsLoading, isError: isManagingPersonsError } = useGetManagingPersons();
-  const [managingPersonsOptions, setManagingPersonsOptions] = useState<Option[]>([]);
-
-  const { data: facultiesData, isLoading: isFacultiesLoading, isError: isFacultiesError } = useGetFaculties();
-  const [facultiesOptions, setFacultiesOptions] = useState<Option[]>([]);
-
-  useEffect(() => {
-    if (usersData) {
-      setUsersOptions(usersData.map(user => ({ id: user.idusers, name: user.firstname }))); // Ajusta según la estructura de tu data
-    }
-    if (applicantsData) {
-      setApplicantsOptions(applicantsData.map(applicant => ({ id: applicant.idperson, name: applicant.name, lastName: applicant.lastname }))); // Ajusta según la estructura de tu data
-    }
-    if (managingPersonsData) {
-      setManagingPersonsOptions(managingPersonsData.map(person => ({ id: person.idperson, name: person.name }))); // Ajusta según la estructura de tu data
-    }
-    if (facultiesData) {
-      setFacultiesOptions(facultiesData.map(faculty => ({ id: faculty.idfaculty, name: faculty.name }))); // Ajusta según la estructura de tu data
-    }
-  }, [usersData, applicantsData, managingPersonsData, facultiesData]);
+  // Estados para las opciones de selección (simulados por ahora)
+  const [usersOptions, setUsersOptions] = useState<Option[]>([{ id: 1, name: 'Usuario 1' }, { id: 2, name: 'Usuario 2' }]);
+  const [applicantsOptions, setApplicantsOptions] = useState<Option[]>([{ id: 1, name: 'Solicitante 1', lastName: 'Apellido 1' }, { id: 2, name: 'Solicitante 2', lastName: 'Apellido 2' }]);
+  const [managingPersonsOptions, setManagingPersonsOptions] = useState<Option[]>([{ id: 1, name: 'Gestor 1' }, { id: 2, name: 'Gestor 2' }]);
+  const [facultiesOptions, setFacultiesOptions] = useState<Option[]>([{ id: 1, name: 'Facultad 1' }, { id: 2, name: 'Facultad 2' }]);
 
   const handleUserChange = (event: React.ChangeEvent<{}>, value: Option | null) => {
     setFormData({ ...formData, userId: value ? value.id.toString() : '' });
@@ -94,16 +67,37 @@ export function CreateCreditView() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     createCredit({
-      userId: parseInt(formData.userId, 10),
-      applicantId: parseInt(formData.applicantId, 10),
-      managingPersonId: formData.managingPersonId ? parseInt(formData.managingPersonId, 10) : null,
-      facultyId: parseInt(formData.facultyId, 10),
+      userId: parseInt(formData.userId, 10), // Especifica radix 10
+      applicantId: parseInt(formData.applicantId, 10), // Especifica radix 10
+      managingPersonId: formData.managingPersonId ? parseInt(formData.managingPersonId, 10) : null, // Especifica radix 10
+      facultyId: parseInt(formData.facultyId, 10), // Especifica radix 10
       debtAmount: parseFloat(formData.debtAmount),
     });
   };
 
-  // Renderizado de los Autocomplete (sin cambios significativos aquí)
-  // ...
+  if (isPending) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height={200}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Typography color="error">
+        Error al crear el crédito: {error?.message || 'Ocurrió un error al crear el crédito.'}
+      </Typography>
+    );
+  }
+
+  if (isSuccess && createdCredit) {
+    return (
+      <Typography color="success">
+        Crédito creado exitosamente con ID: {createdCredit.id}
+      </Typography>
+    );
+  }
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, maxWidth: 400, mx: 'auto' }}>
