@@ -21,6 +21,8 @@ export const creditService = {
   deleteCredit: (id: number) => api.delete(`/credits/${id}`).then(res => res.data),
   searchCredits: (filters: { faculty: string; estado: string }) =>
     api.get<Credit[]>(endpoints.credits, { params: filters }).then(res => res.data),
+  getCreditsByFacultyAndState: (faculty: string, estado: string) => 
+    api.get(endpoints.creditByFacultyAndState(faculty, estado)),
 };
 
 export const useCreateCredit = () => useMutation({

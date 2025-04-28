@@ -61,20 +61,25 @@ export function HistoryView() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [filters, setFilters] = useState({ faculty: '', estado: '' });
 
-  // Filtrado de créditos según búsqueda
-  const filteredCredits = creditData
-    ? creditData.filter(credit =>
-        (filters.faculty
-          ? credit.faculty.name.toLowerCase().includes(filters.faculty.toLowerCase())
-          : true) &&
-        (filters.estado
-          ? getEstadoTexto(credit.state).text.toLowerCase().includes(filters.estado.toLowerCase())
-          : true)
-      )
-    : [];
+  // Consulta que se actualiza según los filtros
+  const { data: creditData, isPending, isError } = useQuery<Credit[]>({
+    queryKey: ['credits', filters],
+    queryFn: () => {
+      if (filters.faculty || filters.estado) {
+        return creditService
+          .getCreditsByFacultyAndState(filters.faculty, filters.estado)
+          .then((res) => res.data);
+      }
+      return creditService
+        .getAllCredits()
+        .then((res) => res.data);
+    },
+  });
 
-  // Paginación: Se obtiene el subconjunto de datos a mostrar
-  const displayData = filteredCredits.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  // Uso directo de creditData, ya viene filtrado desde backend
+  const displayData = creditData
+    ? creditData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    : [];
 
   // Handlers de paginación
   const handleChangePage = (
@@ -106,6 +111,11 @@ export function HistoryView() {
   };
 
   // Handler para eliminar un crédito
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => creditService.deleteCredit(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credits', filters] }),
+  });
+
   const handleDelete = () => {
     if (optionCredit && window.confirm('¿Estás seguro de que deseas eliminar este crédito?')) {
       deleteMutation.mutate(optionCredit.id);
@@ -301,13 +311,15 @@ export function HistoryView() {
       />
 
       {renderTable()}
+
       <PaginationComponent
-        count={filteredCredits.length}
+        count={creditData ? creditData.length : 0}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+      
       {renderPopover()}
       {renderCreditModal()}
     </>
