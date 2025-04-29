@@ -1,20 +1,30 @@
 import React, { useState } from 'react';
 import { alpha } from '@mui/material/styles';
+import { TransitionProps } from '@mui/material/transitions';
 import {
   Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper,
   Dialog, DialogTitle, DialogContent, Typography, CircularProgress, Box,
-  IconButton, Popover, MenuList, MenuItem, Button, TextField, Select
+  IconButton, Popover, MenuList, MenuItem, Button, TextField, Select,
+  Collapse,
 } from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { menuItemClasses } from '@mui/material/MenuItem';
+import Zoom, { ZoomProps } from '@mui/material/Zoom';
 import { Iconify } from 'src/components/iconify';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { creditService } from '../../../api/services/creditService';
 import { Credit } from '../../../types/credit';
 import { PaginationComponent } from '../../../components/pagination/pagination';
 import { SearchFilterModal } from '../../../components/filter/creditFilter';
+import { CreateCreditView } from '../../createCredit/CreateCreditView';
+
+const Transition = React.forwardRef<unknown, ZoomProps>(
+  (props, ref) => <Zoom ref={ref} {...props} />
+);
+
+Transition.displayName = 'Transition';
 
 export function HistoryView() {
-
   // Estados del componente
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [optionAnchorEl, setOptionAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -28,11 +38,13 @@ export function HistoryView() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState('');
+  const [createCreditModalOpen, setCreateCreditModalOpen] = useState(false);
+  const [creditCreatedSuccess, setCreditCreatedSuccess] = useState(false);
 
   const queryClient = useQueryClient();
 
-// Consulta que se actualiza según los filtros
-  const { data: creditData, isPending, isError } = useQuery<Credit[]>({
+  // Consulta que se actualiza según los filtros
+  const { data: creditData, isPending, isError, refetch } = useQuery<Credit[]>({
     queryKey: ['credits', filters],
     queryFn: () => {
       if (filters.faculty || filters.estado) {
@@ -60,7 +72,7 @@ export function HistoryView() {
       setErrorModalOpen(true);
     },
   });
-  
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Credit> }) =>
       creditService.updateCreditById(id, data),
@@ -108,8 +120,6 @@ export function HistoryView() {
     setPage(0);
   };
 
-  
-
   const getEstadoTexto = (estado: number) => {
     switch (estado) {
       case 1:
@@ -122,11 +132,6 @@ export function HistoryView() {
         return { text: 'Desconocido', color: '#757575' };
     }
   };
-
-  const filteredCredits = creditData ? creditData.filter(credit =>
-    (filters.faculty ? credit.faculty.name.toLowerCase().includes(filters.faculty.toLowerCase()) : true) &&
-    (filters.estado ? getEstadoTexto(credit.state).text.toLowerCase().includes(filters.estado.toLowerCase()) : true)
-  ) : [];
 
   const renderTable = () => (
     <TableContainer component={Paper} sx={{ width: '90%', maxWidth: '90vw', height: '70vh', overflowY: 'auto', margin: '0 auto' }}>
@@ -180,15 +185,15 @@ export function HistoryView() {
       anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
       transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
       <MenuList sx={{ p: 0.5, gap: 0.5, width: 140, display: 'flex', flexDirection: 'column', [`& .${menuItemClasses.root}`]: { px: 1, gap: 2, borderRadius: 0.75, [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' } } }}>
-      <MenuItem
-        onClick={() => {
-          setOptionAnchorEl(null);
-          setEditModalOpen(true);
-        }}
-      >
-        <Iconify icon="solar:pen-bold" />
-        Editar
-      </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setOptionAnchorEl(null);
+            setEditModalOpen(true);
+          }}
+        >
+          <Iconify icon="solar:pen-bold" />
+          Editar
+        </MenuItem>
         <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
           <Iconify icon="solar:trash-bin-trash-bold" />Eliminar
         </MenuItem>
@@ -227,7 +232,7 @@ export function HistoryView() {
         {optionCredit && (
           <>
             <Typography>ID: {optionCredit.id}</Typography>
-  
+
             {/* Campo para editar monto */}
             <TextField
               type="number"
@@ -247,7 +252,7 @@ export function HistoryView() {
                 },
               }}
             />
-  
+
             {/* Campo para editar estado */}
             <Select
               label="Estado"
@@ -266,7 +271,7 @@ export function HistoryView() {
               <MenuItem value={2}>Nota Crédito</MenuItem>
               <MenuItem value={3}>Pagado</MenuItem>
             </Select>
-  
+
             {/* Botones */}
             <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
               <Button variant="outlined" onClick={() => setEditModalOpen(false)}>
@@ -297,8 +302,8 @@ export function HistoryView() {
       </DialogContent>
     </Dialog>
   );
-  
-  
+
+
   const renderErrorModal = () => (
     <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
       <DialogTitle sx={{ color: 'error.main' }}>Error</DialogTitle>
@@ -324,6 +329,21 @@ export function HistoryView() {
     </Dialog>
   );
 
+  const handleCreateCreditSuccess = () => {
+    setCreditCreatedSuccess(true);
+    setTimeout(() => {
+      setCreditCreatedSuccess(false);
+      setCreateCreditModalOpen(false);
+      refetch(); // Recarga los datos del historial
+    }, 1500); // Duración de la animación
+  };
+
+  const handleCloseCreateCreditModal = () => {
+    setCreateCreditModalOpen(false);
+    setCreditCreatedSuccess(false);
+    refetch(); // Recarga los datos al cerrar el modal
+  };
+
   if (isPending) return <Box display="flex" justifyContent="center" mt={5}><CircularProgress /></Box>;
   if (isError) return <Typography color="error">Error al cargar los créditos.</Typography>;
 
@@ -331,7 +351,10 @@ export function HistoryView() {
     <>
       <Typography variant="h5" sx={{ margin: '10px' }} gutterBottom>Historial de Créditos</Typography>
       <Box display="flex" justifyContent="flex-start" mb={2} marginLeft="80px">
-        <Button variant="outlined" onClick={() => setSearchModalOpen(true)}>Buscar Créditos</Button>
+        <Button variant="contained" color="primary" onClick={() => setCreateCreditModalOpen(true)}>
+          Crear Venta a Crédito
+        </Button>
+        <Button variant="outlined" sx={{ ml: 2 }} onClick={() => setSearchModalOpen(true)}>Buscar Créditos</Button>
       </Box>
 
       <SearchFilterModal
@@ -353,6 +376,25 @@ export function HistoryView() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+
+      <Dialog
+        open={createCreditModalOpen}
+        onClose={handleCloseCreateCreditModal}
+        TransitionComponent={Transition}
+        keepMounted
+      >
+        <DialogTitle>Crear Nuevo Crédito</DialogTitle>
+        <DialogContent>
+          <CreateCreditView onSuccess={handleCreateCreditSuccess} />
+          <Collapse in={creditCreatedSuccess}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+              <CheckCircleOutlineIcon color="success" sx={{ mr: 1 }} />
+              <Typography variant="body2" color="success">Crédito creado exitosamente.</Typography>
+            </Box>
+          </Collapse>
+        </DialogContent>
+      </Dialog>
+
       {renderEditModal()}
       {renderPopover()}
       {renderCreditModal()}

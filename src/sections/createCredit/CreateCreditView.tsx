@@ -1,4 +1,3 @@
-// src/sections/createCredit/CreateCreditView.tsx
 import React, { useState, useEffect } from 'react';
 import {
   TextField,
@@ -27,7 +26,13 @@ interface Option {
   lastName?: string; // O cualquier otra propiedad que quieras mostrar
 }
 
-export function CreateCreditView() {
+// Define la interfaz para las props del componente
+interface CreateCreditViewProps {
+  onSuccess: () => void;
+}
+
+// Actualiza la definición del componente para aceptar las props
+export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
   const [formData, setFormData] = useState<FormData>({
     userId: '',
     applicantId: '',
@@ -75,6 +80,12 @@ export function CreateCreditView() {
     });
   };
 
+  useEffect(() => {
+    if (isSuccess && createdCredit) {
+      onSuccess(); // Llama a la función onSuccess cuando la creación es exitosa
+    }
+  }, [isSuccess, createdCredit, onSuccess]);
+
   if (isPending) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height={200}>
@@ -87,14 +98,6 @@ export function CreateCreditView() {
     return (
       <Typography color="error">
         Error al crear el crédito: {error?.message || 'Ocurrió un error al crear el crédito.'}
-      </Typography>
-    );
-  }
-
-  if (isSuccess && createdCredit) {
-    return (
-      <Typography color="success">
-        Crédito creado exitosamente con ID: {createdCredit.id}
       </Typography>
     );
   }
