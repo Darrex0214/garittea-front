@@ -159,7 +159,7 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
         />
       </FormControl>
       <Button type="submit" variant="contained" color="primary" disabled={isPending}>
-        Crear Crédito
+        Crear Orden
       </Button>
     </Box>
   );

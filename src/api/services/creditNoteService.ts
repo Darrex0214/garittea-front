@@ -6,7 +6,7 @@ import { endpoints } from '../endpoints';
 export const creditNoteService = {
   getAllCreditNotes: () => api.get(endpoints.creditNotes),
 
-  createCreditNote: async (data: { idBill: string; amount: number; reason: string }) => {
+  createCreditNote: async (data: { idBill: number; amount: number; reason: string }) => {
     const response = await api.post(endpoints.createCreditNote, data);
     return response.data;
   },

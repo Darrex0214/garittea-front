@@ -30,7 +30,7 @@ export const navData = [
     icon: icon('ic-book'),
   },
   {
-    title: 'Creación Créditos',
+    title: 'Creación Pedidos',
     path: '/home/creacion-creditos',
     icon: icon('ic-cart'),
   },

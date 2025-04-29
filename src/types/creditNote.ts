@@ -1,16 +1,11 @@
-// src/types/creditNote.ts
 export interface CreditNote {
-    id: number;
-    initialBill: {
-      id?: number | null;
-      date?: string | null;
-      amount?: number | null;
-      state?: number | null;
-    } | null;
-    finalBill: {
-      id?: number | null;
-      date?: string | null;
-      amount?: number | null;
-      state?: number | null;
-    } | null;
-  }
+  id: number;
+  amount: number;
+  reason: string;
+  bill: {
+    idbill: number;
+    billdate: string;
+    amount: number;
+    state: string;
+  };
+}

@@ -1,3 +1,4 @@
+// src/sections/createNoteCredit/view/CreateNoteCreditView.tsx
 import React, { useState } from 'react';
 import {
   TextField,
@@ -10,8 +11,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
-import { useCreateNoteCredit } from 'src/api/services/creditNoteService'; // crea esta función en tu servicio
+import { useCreateNoteCredit } from 'src/api/services/creditNoteService'; 
 
 export function CreateNoteCreditView() {
   const [formData, setFormData] = useState({
@@ -20,13 +20,18 @@ export function CreateNoteCreditView() {
     motivo: '',
   });
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { mutate: createNote, isPending } = useCreateNoteCredit({
-    onSuccess: () => setModalOpen(true),
-    onError: (error: any) => alert(`Error: ${error.message}`),
+    onSuccess: () => setSuccessModalOpen(true),
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || error.message || 'Ocurrió un error inesperado.';
+      setErrorMessage(msg);
+      setErrorModalOpen(true);
+    },
   });
-
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -36,12 +41,12 @@ export function CreateNoteCreditView() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!formData.consecutivoFactura || !formData.valor || !formData.motivo) {
-      alert('Todos los campos son obligatorios');
+      setErrorMessage('Todos los campos son obligatorios.');
+      setErrorModalOpen(true);
       return;
     }
-
     createNote({
-      idBill: formData.consecutivoFactura,
+      idBill: parseInt(formData.consecutivoFactura, 10),
       amount: parseFloat(formData.valor),
       reason: formData.motivo,
     });
@@ -88,11 +93,23 @@ export function CreateNoteCreditView() {
         </Button>
       </Box>
 
-      <Dialog open={modalOpen} onClose={() => setModalOpen(false)}>
+      {/* Modal de éxito */}
+      <Dialog open={successModalOpen} onClose={() => setSuccessModalOpen(false)}>
         <DialogTitle>¡Éxito!</DialogTitle>
         <DialogContent>La nota crédito se ha creado y se ha asignado exitosamente.</DialogContent>
         <DialogActions>
-          <Button onClick={() => setModalOpen(false)} autoFocus>
+          <Button onClick={() => setSuccessModalOpen(false)} autoFocus>
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal de error */}
+      <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>{errorMessage}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setErrorModalOpen(false)} autoFocus>
             Cerrar
           </Button>
         </DialogActions>

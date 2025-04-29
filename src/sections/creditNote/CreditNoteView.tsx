@@ -43,19 +43,6 @@ export function CreditNoteView() {
     setPage(0);
   };
 
-  // Adaptar según los estados de tus facturas si es necesario
-  const getEstadoTexto = (estado: number | undefined | null) => {
-    switch (estado) {
-      case 1:
-        return { text: 'Pendiente', color: '#c62828' };
-      case 2:
-        return { text: 'Aprobada', color: '#2e7d32' };
-      // Agrega más casos según tus estados
-      default:
-        return { text: 'Desconocido', color: '#757575' };
-    }
-  };
-
   const renderTable = () => (
     <TableContainer
       component={Paper}
@@ -64,15 +51,12 @@ export function CreditNoteView() {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>ID Factura Inicial</TableCell>
-            <TableCell>Fecha Factura Inicial</TableCell>
-            <TableCell>Monto Factura Inicial</TableCell>
-            <TableCell>Estado Factura Inicial</TableCell>
-            <TableCell>ID Factura Final</TableCell>
-            <TableCell>Fecha Factura Final</TableCell>
-            <TableCell>Monto Factura Final</TableCell>
-            <TableCell>Estado Factura Final</TableCell>
+            <TableCell>ID Nota Crédito</TableCell>
+            <TableCell>Monto</TableCell>
+            <TableCell>Motivo</TableCell>
+            <TableCell>ID Factura Asociada</TableCell>
+            <TableCell>Fecha de Factura</TableCell>
+            <TableCell>Estado Factura</TableCell>
             <TableCell align="right">Opción</TableCell>
           </TableRow>
         </TableHead>
@@ -85,22 +69,15 @@ export function CreditNoteView() {
               sx={{ cursor: 'pointer' }}
             >
               <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-              <TableCell>{creditNote.initialBill?.id || '-'}</TableCell>
-              <TableCell>{creditNote.initialBill?.date ? new Date(creditNote.initialBill.date).toLocaleDateString() : '-'}</TableCell>
-              <TableCell>{creditNote.initialBill?.amount ? creditNote.initialBill.amount.toLocaleString() : '-'}</TableCell>
+              <TableCell>{creditNote.amount.toLocaleString()}</TableCell>
+              <TableCell>{creditNote.reason}</TableCell>
+              <TableCell>{creditNote.bill?.idbill || '-'}</TableCell>
               <TableCell>
-                {creditNote.initialBill?.state !== undefined && creditNote.initialBill?.state !== null
-                  ? getEstadoTexto(creditNote.initialBill.state).text
+                {creditNote.bill?.billdate
+                  ? new Date(creditNote.bill.billdate).toLocaleDateString()
                   : '-'}
               </TableCell>
-              <TableCell>{creditNote.finalBill?.id || '-'}</TableCell>
-              <TableCell>{creditNote.finalBill?.date ? new Date(creditNote.finalBill.date).toLocaleDateString() : '-'}</TableCell>
-              <TableCell>{creditNote.finalBill?.amount ? creditNote.finalBill.amount.toLocaleString() : '-'}</TableCell>
-              <TableCell>
-                {creditNote.finalBill?.state !== undefined && creditNote.finalBill?.state !== null
-                  ? getEstadoTexto(creditNote.finalBill.state).text
-                  : '-'}
-              </TableCell>
+              <TableCell>{creditNote.bill?.state || '-'}</TableCell>
               <TableCell align="right">
                 <IconButton
                   onClick={(e) => {
@@ -149,21 +126,14 @@ export function CreditNoteView() {
           onClick={() => {
             setOptionAnchorEl(null);
             setOptionCreditNote(null);
-            // Aquí podrías agregar la lógica para ver detalles o editar
             console.log('Ver detalles/Editar', optionCreditNote);
           }}
         >
           <Iconify icon="solar:eye-bold" />
           Ver Detalles
         </MenuItem>
-        {/* Puedes agregar más opciones aquí */}
       </MenuList>
     </Popover>
-  );
-
-  const renderCreditNoteModal = () => (
-    // Puedes crear un modal similar a renderCreditModal en HistoryView si necesitas mostrar detalles
-    <></>
   );
 
   if (isPending) {
@@ -192,7 +162,6 @@ export function CreditNoteView() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       {renderPopover()}
-      {renderCreditNoteModal()}
     </>
   );
 }
