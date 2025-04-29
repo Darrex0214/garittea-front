@@ -105,7 +105,7 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, maxWidth: 400, mx: 'auto' }}>
       <Typography variant="h5" gutterBottom>
-        Crear Nuevo Crédito
+        Crear Nuevo Pedido
       </Typography>
       <FormControl fullWidth margin="normal">
         <Autocomplete

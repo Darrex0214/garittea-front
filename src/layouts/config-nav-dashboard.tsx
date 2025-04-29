@@ -40,6 +40,11 @@ export const navData = [
     icon: icon('ic-lock'),
   },
   {
+    title: 'Creacion Notas Crédito',
+    path: '/home/creacion-notas',
+    icon: icon('ic-lock'),
+  },
+  {
     title: 'Reportes',
     path: '/home/reportes',
     icon: icon('ic-blog'),

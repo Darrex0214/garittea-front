@@ -349,7 +349,11 @@ export function HistoryView() {
 
   return (
     <>
-      <Typography variant="h5" sx={{ margin: '10px' }} gutterBottom>Historial de Créditos</Typography>
+      <Typography variant="h5" sx={{ margin: '10px' }} gutterBottom>
+        Historial de Créditos
+      </Typography>
+
+      {/* Botón para abrir el modal de búsqueda */}
       <Box display="flex" justifyContent="flex-start" mb={2} marginLeft="80px">
         <Button variant="contained" color="primary" onClick={() => setCreateCreditModalOpen(true)}>
           Crear Venta a Crédito

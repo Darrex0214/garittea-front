@@ -1,12 +1,15 @@
 // src/api/services/creditNoteService.ts
-import { useQuery } from '@tanstack/react-query';
-import { CreditNote } from 'src/types/creditNote'; // Mueve esta importación arriba
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../client';
 import { endpoints } from '../endpoints';
 
 export const creditNoteService = {
   getAllCreditNotes: () => api.get(endpoints.creditNotes),
-  // Podrías agregar otras funciones aquí si las necesitas (obtener por ID, etc.)
+
+  createCreditNote: async (data: { idBill: string; amount: number; reason: string }) => {
+    const response = await api.post(endpoints.createCreditNote, data);
+    return response.data;
+  },
 };
 
 export const useGetCreditNotes = () => useQuery({
@@ -16,3 +19,12 @@ export const useGetCreditNotes = () => useQuery({
     return response.data;
   },
 });
+
+export const useCreateNoteCredit = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: any) => void;
+}) =>
+  useMutation({
+    mutationFn: creditNoteService.createCreditNote,
+    ...options,
+  });

@@ -1,6 +1,5 @@
 // src/sections/creditNote/CreditNoteView.tsx
 import React, { useState } from 'react';
-import { alpha } from '@mui/material/styles';
 import {
   Table,
   TableHead,
