@@ -1,4 +1,3 @@
-// src/sections/creditNote/CreditNoteView.tsx
 import React, { useState } from 'react';
 import {
   Table,
@@ -24,7 +23,6 @@ import { PaginationComponent } from 'src/components/pagination/pagination';
 
 export function CreditNoteView() {
   const { data: creditNoteData, isPending, isError } = useGetCreditNotes();
-  const [selectedCreditNote, setSelectedCreditNote] = useState<CreditNote | null>(null);
   const [optionAnchorEl, setOptionAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [optionCreditNote, setOptionCreditNote] = useState<CreditNote | null>(null);
   const [page, setPage] = useState(0);
@@ -34,7 +32,7 @@ export function CreditNoteView() {
     ? creditNoteData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     : [];
 
-  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+  const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
     setPage(newPage);
   };
 
@@ -51,33 +49,38 @@ export function CreditNoteView() {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>ID Nota Crédito</TableCell>
+            <TableCell>#</TableCell>
             <TableCell>Monto</TableCell>
             <TableCell>Motivo</TableCell>
-            <TableCell>ID Factura Asociada</TableCell>
-            <TableCell>Fecha de Factura</TableCell>
-            <TableCell>Estado Factura</TableCell>
+            <TableCell>ID Factura Inicial</TableCell>
+            <TableCell>Fecha Factura Inicial</TableCell>
+            <TableCell>Estado Factura Inicial</TableCell>
+            <TableCell>ID Factura Final</TableCell>
+            <TableCell>Fecha Factura Final</TableCell>
+            <TableCell>Estado Factura Final</TableCell>
             <TableCell align="right">Opción</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {displayData.map((creditNote: CreditNote, index: number) => (
-            <TableRow
-              key={creditNote.id}
-              hover
-              onClick={() => setSelectedCreditNote(creditNote)}
-              sx={{ cursor: 'pointer' }}
-            >
+            <TableRow key={creditNote.id} hover>
               <TableCell>{page * rowsPerPage + index + 1}</TableCell>
               <TableCell>{creditNote.amount.toLocaleString()}</TableCell>
               <TableCell>{creditNote.reason}</TableCell>
-              <TableCell>{creditNote.bill?.idbill || '-'}</TableCell>
+              <TableCell>{creditNote.initialBill?.idbill ?? '-'}</TableCell>
               <TableCell>
-                {creditNote.bill?.billdate
-                  ? new Date(creditNote.bill.billdate).toLocaleDateString()
+                {creditNote.initialBill?.billdate
+                  ? new Date(creditNote.initialBill.billdate).toLocaleDateString()
                   : '-'}
               </TableCell>
-              <TableCell>{creditNote.bill?.state || '-'}</TableCell>
+              <TableCell>{creditNote.initialBill?.state ?? '-'}</TableCell>
+              <TableCell>{creditNote.finalBill?.idbill ?? '-'}</TableCell>
+              <TableCell>
+                {creditNote.finalBill?.billdate
+                  ? new Date(creditNote.finalBill.billdate).toLocaleDateString()
+                  : '-'}
+              </TableCell>
+              <TableCell>{creditNote.finalBill?.state ?? '-'}</TableCell>
               <TableCell align="right">
                 <IconButton
                   onClick={(e) => {
@@ -155,7 +158,7 @@ export function CreditNoteView() {
       </Typography>
       {renderTable()}
       <PaginationComponent
-        count={creditNoteData ? creditNoteData.length : 0}
+        count={creditNoteData?.length ?? 0}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={handleChangePage}

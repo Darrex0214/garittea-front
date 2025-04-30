@@ -350,7 +350,7 @@ export function HistoryView() {
   return (
     <>
       <Typography variant="h5" sx={{ margin: '10px' }} gutterBottom>
-        Historial de Créditos
+        Historial de Ventas a Crédito
       </Typography>
 
       {/* Botón para abrir el modal de búsqueda */}

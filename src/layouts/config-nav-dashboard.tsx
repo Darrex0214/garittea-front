@@ -25,14 +25,9 @@ export const navData = [
     icon: icon('ic-faculties'),
   },
   {
-    title: 'Créditos',
+    title: 'Ventas a Crédito',
     path: '/home/creditos',
     icon: icon('ic-book'),
-  },
-  {
-    title: 'Creación Pedidos',
-    path: '/home/creacion-creditos',
-    icon: icon('ic-cart'),
   },
   {
     title: 'Notas Crédito',
@@ -40,9 +35,14 @@ export const navData = [
     icon: icon('ic-lock'),
   },
   {
-    title: 'Creacion Notas Crédito',
+    title: 'Anulación de ',
     path: '/home/creacion-notas',
     icon: icon('ic-lock'),
+  },
+  {
+    title: 'Carga de reportes',
+    path: '/home/carga-reportes',
+    icon: icon('ic-cart'),
   },
   {
     title: 'Reportes',

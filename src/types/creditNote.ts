@@ -2,10 +2,14 @@ export interface CreditNote {
   id: number;
   amount: number;
   reason: string;
-  bill: {
+  initialBill: {
     idbill: number;
     billdate: string;
-    amount: number;
+    state: string;
+  };
+  finalBill: {
+    idbill: number;
+    billdate: string;
     state: string;
   };
 }

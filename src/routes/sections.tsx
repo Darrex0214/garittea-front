@@ -18,7 +18,7 @@ export const BlogPage = lazy(() => import('src/pages/blog'));
 export const HistoryPage = lazy(() => import('src/pages/history'));
 export const NoteCreditPage = lazy(() => import('src/pages/noteCredit'));
 export const CreateNotePage = lazy(() => import('src/pages/createNote'));
-export const CreditPage = lazy(() => import('src/pages/createCredit'));
+export const FileUploadPage = lazy(() => import('src/pages/fileUpload'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const ReportGeneratorPage = lazy(() => import('src/pages/report-generator'));
 
@@ -69,7 +69,7 @@ export function Router() {
         { path: 'personas', element: <HomePage /> },       
         { path: 'facultades', element: <HomePage /> },   
         { path: 'creditos', element: <HistoryPage /> },       
-        { path: 'creacion-creditos', element: <CreditPage />},
+        { path: 'carga-reportes', element: <FileUploadPage />},
         { path: 'notas-credito', element: <NoteCreditPage />},
         { path: 'creacion-notas', element: <CreateNotePage />},
         { path: 'reportes', element: <BlogPage />},

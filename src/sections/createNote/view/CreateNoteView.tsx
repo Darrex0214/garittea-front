@@ -1,4 +1,3 @@
-// src/sections/createNoteCredit/view/CreateNoteCreditView.tsx
 import React, { useState } from 'react';
 import {
   TextField,
@@ -11,11 +10,12 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import { useCreateNoteCredit } from 'src/api/services/creditNoteService'; 
+import { useCreateNoteCredit } from 'src/api/services/creditNoteService';
 
 export function CreateNoteCreditView() {
   const [formData, setFormData] = useState({
-    consecutivoFactura: '',
+    initialBillId: '',
+    finalBillId: '',
     valor: '',
     motivo: '',
   });
@@ -40,13 +40,16 @@ export function CreateNoteCreditView() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!formData.consecutivoFactura || !formData.valor || !formData.motivo) {
-      setErrorMessage('Todos los campos son obligatorios.');
+
+    if (!formData.initialBillId || !formData.valor || !formData.motivo) {
+      setErrorMessage('Los campos "Factura Inicial", "Valor" y "Motivo" son obligatorios.');
       setErrorModalOpen(true);
       return;
     }
+
     createNote({
-      idBill: parseInt(formData.consecutivoFactura, 10),
+      initialBillId: parseInt(formData.initialBillId, 10),
+      finalBillId: formData.finalBillId ? parseInt(formData.finalBillId, 10) : undefined,
       amount: parseFloat(formData.valor),
       reason: formData.motivo,
     });
@@ -60,12 +63,20 @@ export function CreateNoteCreditView() {
         </Typography>
 
         <TextField
-          label="Consecutivo de Factura"
-          name="consecutivoFactura"
-          value={formData.consecutivoFactura}
+          label="ID Factura Inicial"
+          name="initialBillId"
+          value={formData.initialBillId}
           onChange={handleInputChange}
           fullWidth
           required
+          margin="normal"
+        />
+        <TextField
+          label="ID Factura Final"
+          name="finalBillId"
+          value={formData.finalBillId}
+          onChange={handleInputChange}
+          fullWidth
           margin="normal"
         />
         <TextField
@@ -93,7 +104,6 @@ export function CreateNoteCreditView() {
         </Button>
       </Box>
 
-      {/* Modal de éxito */}
       <Dialog open={successModalOpen} onClose={() => setSuccessModalOpen(false)}>
         <DialogTitle>¡Éxito!</DialogTitle>
         <DialogContent>La nota crédito se ha creado y se ha asignado exitosamente.</DialogContent>
@@ -104,7 +114,6 @@ export function CreateNoteCreditView() {
         </DialogActions>
       </Dialog>
 
-      {/* Modal de error */}
       <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
         <DialogTitle>Error</DialogTitle>
         <DialogContent>{errorMessage}</DialogContent>
