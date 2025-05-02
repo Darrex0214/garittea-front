@@ -1,5 +1,3 @@
-import path from 'path';
-import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 import { logout } from 'src/api/authService';
 // ----------------------------------------------------------------------
@@ -35,7 +33,7 @@ export const navData = [
     icon: icon('ic-lock'),
   },
   {
-    title: 'Anulación de ',
+    title: 'Anulación de Facturas',
     path: '/home/creacion-notas',
     icon: icon('ic-lock'),
   },

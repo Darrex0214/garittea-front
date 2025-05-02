@@ -3,13 +3,13 @@ export interface CreditNote {
   amount: number;
   reason: string;
   initialBill: {
-    idbill: number;
-    billdate: string;
+    id: number;
+    date: string;
     state: string;
   };
   finalBill: {
-    idbill: number;
-    billdate: string;
+    id: number;
+    date: string;
     state: string;
   };
 }
