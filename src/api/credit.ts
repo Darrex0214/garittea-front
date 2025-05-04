@@ -12,3 +12,5 @@ export const createCredit = async (creditData: {
   const response = await api.post(endpoints.credits, creditData)
   return response.data
 }
+
+
