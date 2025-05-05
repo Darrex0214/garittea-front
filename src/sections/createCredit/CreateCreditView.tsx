@@ -6,11 +6,13 @@ import {
   CircularProgress,
   Typography,
   Autocomplete,
-  FormControl,
-  FormLabel,
-  AutocompleteRenderInputParams,
+  Container,
+  Card,
+  InputAdornment,
 } from '@mui/material';
 import { useCreateCredit } from 'src/api/services/creditService';
+import { personService } from 'src/api/services/personService';
+import { facultyService } from 'src/api/services/facultyService';
 
 interface FormData {
   userId: string;
@@ -23,66 +25,117 @@ interface FormData {
 interface Option {
   id: number;
   name: string;
-  lastName?: string; // O cualquier otra propiedad que quieras mostrar
 }
 
-// Define la interfaz para las props del componente
 interface CreateCreditViewProps {
   onSuccess: () => void;
 }
 
-// Actualiza la definición del componente para aceptar las props
+// Estado inicial para el formulario
+const initialFormData: FormData = {
+  userId: '',
+  applicantId: '',
+  managingPersonId: '',
+  facultyId: '',
+  debtAmount: '',
+};
+
 export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
-  const [formData, setFormData] = useState<FormData>({
-    userId: '',
-    applicantId: '',
-    managingPersonId: '',
-    facultyId: '',
-    debtAmount: '',
-  });
-  const { mutate: createCredit, isPending, isSuccess, isError, data: createdCredit, error } = useCreateCredit();
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const {
+    mutate: createCredit,
+    isPending,
+    isSuccess,
+    isError,
+    data: createdCredit,
+    error,
+  } = useCreateCredit();
 
-  // Estados para las opciones de selección (simulados por ahora)
-  const [usersOptions, setUsersOptions] = useState<Option[]>([{ id: 1, name: 'Usuario 1' }, { id: 2, name: 'Usuario 2' }]);
-  const [applicantsOptions, setApplicantsOptions] = useState<Option[]>([{ id: 1, name: 'Solicitante 1', lastName: 'Apellido 1' }, { id: 2, name: 'Solicitante 2', lastName: 'Apellido 2' }]);
-  const [managingPersonsOptions, setManagingPersonsOptions] = useState<Option[]>([{ id: 1, name: 'Gestor 1' }, { id: 2, name: 'Gestor 2' }]);
-  const [facultiesOptions, setFacultiesOptions] = useState<Option[]>([{ id: 1, name: 'Facultad 1' }, { id: 2, name: 'Facultad 2' }]);
+  const [peopleOptions, setPeopleOptions] = useState<Option[]>([]);
+  const [loadingPeople, setLoadingPeople] = useState(false);
+  const [facultiesOptions, setFacultiesOptions] = useState<Option[]>([]);
+  const [loadingFaculties, setLoadingFaculties] = useState(false);
 
-  const handleUserChange = (event: React.ChangeEvent<{}>, value: Option | null) => {
-    setFormData({ ...formData, userId: value ? value.id.toString() : '' });
+  // Fetch people
+  useEffect(() => {
+    const fetchPeople = async () => {
+      setLoadingPeople(true);
+      try {
+        const response = await personService.getAllPeople();
+        setPeopleOptions(
+          response.data.map((p: any) => ({ id: p.id, name: `${p.firstname} ${p.lastname}` }))
+        );
+      } catch (e) {
+        console.error('Error fetching people:', e);
+      } finally {
+        setLoadingPeople(false);
+      }
+    };
+    fetchPeople();
+  }, []);
+
+  // Fetch faculties
+  useEffect(() => {
+    const fetchFaculties = async () => {
+      setLoadingFaculties(true);
+      try {
+        const response = await facultyService.getAllFaculties();
+        setFacultiesOptions(
+          response.data.map((f: any) => ({ id: f.id, name: f.name }))
+        );
+      } catch (e) {
+        console.error('Error fetching faculties:', e);
+      } finally {
+        setLoadingFaculties(false);
+      }
+    };
+    fetchFaculties();
+  }, []);
+
+  const handleSelectChange = (field: keyof FormData) => (
+    _event: any,
+    value: Option | null
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value ? value.id.toString() : '',
+    }));
   };
 
-  const handleApplicantChange = (event: React.ChangeEvent<{}>, value: Option | null) => {
-    setFormData({ ...formData, applicantId: value ? value.id.toString() : '' });
+  const handleDebtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\./g, '').replace(/\$/g, '').trim();
+    setFormData((prev) => ({ ...prev, debtAmount: raw }));
   };
 
-  const handleManagingPersonChange = (event: React.ChangeEvent<{}>, value: Option | null) => {
-    setFormData({ ...formData, managingPersonId: value ? value.id.toString() : '' });
+  const formatCurrency = (value: string) => {
+    if (!value) return '';
+    const num = Number(value.replace(/\D/g, ''));
+    return new Intl.NumberFormat('es-CO').format(num);
   };
 
-  const handleFacultyChange = (event: React.ChangeEvent<{}>, value: Option | null) => {
-    setFormData({ ...formData, facultyId: value ? value.id.toString() : '' });
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     createCredit({
-      userId: parseInt(formData.userId, 10), // Especifica radix 10
-      applicantId: parseInt(formData.applicantId, 10), // Especifica radix 10
-      managingPersonId: formData.managingPersonId ? parseInt(formData.managingPersonId, 10) : null, // Especifica radix 10
-      facultyId: parseInt(formData.facultyId, 10), // Especifica radix 10
-      debtAmount: parseFloat(formData.debtAmount),
+      userId: parseInt(formData.userId, 10),
+      applicantId: parseInt(formData.applicantId, 10),
+      managingPersonId: formData.managingPersonId
+        ? parseInt(formData.managingPersonId, 10)
+        : null,
+      facultyId: parseInt(formData.facultyId, 10),
+      debtAmount: parseInt(formData.debtAmount, 10),
     });
   };
 
+  // Reset form y notificar éxito
   useEffect(() => {
     if (isSuccess && createdCredit) {
-      onSuccess(); // Llama a la función onSuccess cuando la creación es exitosa
+      setFormData(initialFormData);
+      onSuccess();
     }
   }, [isSuccess, createdCredit, onSuccess]);
 
@@ -97,70 +150,91 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
   if (isError) {
     return (
       <Typography color="error">
-        Error al crear el crédito: {error?.message || 'Ocurrió un error al crear el crédito.'}
+        Error al crear el crédito: {error?.message || 'Ocurrió un error.'}
       </Typography>
     );
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, maxWidth: 400, mx: 'auto' }}>
-      <Typography variant="h5" gutterBottom>
-        Crear Nuevo Pedido
-      </Typography>
-      <FormControl fullWidth margin="normal">
-        <Autocomplete
-          id="userId"
-          options={usersOptions}
-          getOptionLabel={(option) => option.name}
-          value={usersOptions.find((option) => option.id.toString() === formData.userId) || null}
-          onChange={handleUserChange}
-          renderInput={(params) => <TextField {...params} label="Usuario" />}
-        />
-      </FormControl>
-      <FormControl fullWidth margin="normal">
-        <Autocomplete
-          id="applicantId"
-          options={applicantsOptions}
-          getOptionLabel={(option) => `${option.name} ${option.lastName || ''}`}
-          value={applicantsOptions.find((option) => option.id.toString() === formData.applicantId) || null}
-          onChange={handleApplicantChange}
-          renderInput={(params) => <TextField {...params} label="Solicitante" />}
-        />
-      </FormControl>
-      <FormControl fullWidth margin="normal">
-        <Autocomplete
-          id="managingPersonId"
-          options={managingPersonsOptions}
-          getOptionLabel={(option) => option.name}
-          value={managingPersonsOptions.find((option) => option.id.toString() === formData.managingPersonId) || null}
-          onChange={handleManagingPersonChange}
-          renderInput={(params) => <TextField {...params} label="Gestor" />}
-        />
-      </FormControl>
-      <FormControl fullWidth margin="normal">
-        <Autocomplete
-          id="facultyId"
-          options={facultiesOptions}
-          getOptionLabel={(option) => option.name}
-          value={facultiesOptions.find((option) => option.id.toString() === formData.facultyId) || null}
-          onChange={handleFacultyChange}
-          renderInput={(params) => <TextField {...params} label="Facultad" />}
-        />
-      </FormControl>
-      <FormControl fullWidth margin="normal">
-        <FormLabel id="debtAmount-label">Monto de la Deuda</FormLabel>
-        <TextField
-          aria-labelledby="debtAmount-label"
-          id="debtAmount"
-          name="debtAmount"
-          type="number"
-          value={formData.debtAmount}
-          onChange={handleInputChange}
-        />
-      </FormControl>
-      <Button type="submit" variant="contained" color="primary" disabled={isPending}>
-        Crear Orden
-      </Button>
-    </Box>
+    <Container maxWidth="xl">
+      <Card sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: 4 }}>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+        >
+          <Typography variant="h4" gutterBottom>
+            Crear Nuevo Crédito
+          </Typography>
+
+          <TextField
+            fullWidth
+            name="userId"
+            label="ID de Usuario"
+            type="number"
+            value={formData.userId}
+            onChange={handleInputChange}
+          />
+
+          <Autocomplete
+            options={peopleOptions}
+            getOptionLabel={(option) => option.name}
+            loading={loadingPeople}
+            value={
+              peopleOptions.find((opt) => opt.id.toString() === formData.applicantId) ||
+              null
+            }
+            onChange={handleSelectChange('applicantId')}
+            renderInput={(params) => <TextField {...params} label="Solicitante" />}
+          />
+
+          <Autocomplete
+            options={peopleOptions}
+            getOptionLabel={(option) => option.name}
+            loading={loadingPeople}
+            value={
+              peopleOptions.find((opt) => opt.id.toString() === formData.managingPersonId) ||
+              null
+            }
+            onChange={handleSelectChange('managingPersonId')}
+            renderInput={(params) => <TextField {...params} label="Gestor" />}
+          />
+
+          <Autocomplete
+            options={facultiesOptions}
+            getOptionLabel={(option) => option.name}
+            loading={loadingFaculties}
+            value={
+              facultiesOptions.find(
+                (opt) => opt.id.toString() === formData.facultyId
+              ) || null
+            }
+            onChange={handleSelectChange('facultyId')}
+            renderInput={(params) => <TextField {...params} label="Facultad" />}
+          />
+
+          <TextField
+            fullWidth
+            name="debtAmount"
+            label="Monto de la Deuda"
+            value={formatCurrency(formData.debtAmount)}
+            onChange={handleDebtChange}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+            }}
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={isPending}
+            sx={{ alignSelf: 'flex-end', mt: 2 }}
+          >
+            Crear Orden
+          </Button>
+        </Box>
+      </Card>
+    </Container>
   );
 }
