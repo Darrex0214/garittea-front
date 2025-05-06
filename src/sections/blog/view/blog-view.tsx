@@ -41,7 +41,7 @@ export function BlogView() {
         <Grid xs={12} md={6}>
           <Card sx={cardStyle}>
             <CardActionArea 
-              onClick={() => navigate('/report-generator', { state: { reportType: 'creditReport' } })}
+              onClick={() => navigate('/home/report-generator', { state: { reportType: 'creditReport' } })}
               sx={cardActionAreaStyle}
             >
               <Box sx={{ p: 3, display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -62,7 +62,7 @@ export function BlogView() {
         <Grid xs={12} md={6}>
           <Card sx={cardStyle}>
             <CardActionArea 
-              onClick={() => navigate('/report-generator', { state: { reportType: 'technicalReport' } })}
+              onClick={() => navigate('/home/report-generator', { state: { reportType: 'technicalReport' } })}
               sx={cardActionAreaStyle}
             >
               <Box sx={{ p: 3, display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -76,48 +76,6 @@ export function BlogView() {
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Visualizar estadísticas mediante diagramas de torta sobre compras por facultad, clientes principales y estados de deuda.
-                  </Typography>
-                </Box>
-              </Box>
-            </CardActionArea>
-          </Card>
-        </Grid>
-
-        <Grid xs={12} md={6}>
-          <Card sx={cardStyle}>
-            <CardActionArea 
-              onClick={() => navigate('/report-generator', { state: { reportType: 'userReport' } })}
-              sx={cardActionAreaStyle}
-            >
-              <Box sx={{ p: 3, display: 'flex', alignItems: 'center', height: '100%' }}>
-                <Iconify icon="solar:users-group-rounded-bold" width={64} sx={{ color: 'success.main', mr: 2 }} />
-                <Box>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Reporte de Usuarios
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Listado de todos los usuarios del sistema con sus respectivos IDs. Incluye una barra de búsqueda para filtrar resultados.
-                  </Typography>
-                </Box>
-              </Box>
-            </CardActionArea>
-          </Card>
-        </Grid>
-
-        <Grid xs={12} md={6}>
-          <Card sx={cardStyle}>
-            <CardActionArea 
-              onClick={() => navigate('/report-generator', { state: { reportType: 'facultyReport' } })}
-              sx={cardActionAreaStyle}
-            >
-              <Box sx={{ p: 3, display: 'flex', alignItems: 'center', height: '100%' }}>
-                <Iconify icon="mdi:bank" width={64} sx={{ color: 'success.main', mr: 2 }} />
-                <Box>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Reporte de Facultades
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Listado de todas las facultades registradas con sus respectivos IDs. Incluye una barra de búsqueda para filtrar resultados.
                   </Typography>
                 </Box>
               </Box>
