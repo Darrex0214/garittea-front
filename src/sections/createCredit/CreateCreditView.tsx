@@ -31,7 +31,6 @@ interface CreateCreditViewProps {
   onSuccess: () => void;
 }
 
-// Estado inicial para el formulario
 const initialFormData: FormData = {
   userId: '',
   applicantId: '',
@@ -42,19 +41,22 @@ const initialFormData: FormData = {
 
 export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const {
-    mutate: createCredit,
-    isPending,
-    isSuccess,
-    isError,
-    data: createdCredit,
-    error,
-  } = useCreateCredit();
-
   const [peopleOptions, setPeopleOptions] = useState<Option[]>([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
   const [facultiesOptions, setFacultiesOptions] = useState<Option[]>([]);
   const [loadingFaculties, setLoadingFaculties] = useState(false);
+
+  const {
+    mutate: createCredit,
+    isPending,
+    isError,
+    error,
+  } = useCreateCredit();
+
+  // Resetear formulario cuando el componente se monta/remonta
+  useEffect(() => {
+    setFormData(initialFormData);
+  }, [onSuccess]);
 
   // Fetch people
   useEffect(() => {
@@ -128,16 +130,13 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
         : null,
       facultyId: parseInt(formData.facultyId, 10),
       debtAmount: parseInt(formData.debtAmount, 10),
+    }, {
+      onSuccess: () => {
+        setFormData(initialFormData);
+        onSuccess();
+      }
     });
   };
-
-  // Reset form y notificar éxito
-  useEffect(() => {
-    if (isSuccess && createdCredit) {
-      setFormData(initialFormData);
-      onSuccess();
-    }
-  }, [isSuccess, createdCredit, onSuccess]);
 
   if (isPending) {
     return (
@@ -174,6 +173,7 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
             type="number"
             value={formData.userId}
             onChange={handleInputChange}
+            required
           />
 
           <Autocomplete
@@ -185,7 +185,13 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
               null
             }
             onChange={handleSelectChange('applicantId')}
-            renderInput={(params) => <TextField {...params} label="Solicitante" />}
+            renderInput={(params) => (
+              <TextField 
+                {...params} 
+                label="Solicitante" 
+                required 
+              />
+            )}
           />
 
           <Autocomplete
@@ -210,7 +216,13 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
               ) || null
             }
             onChange={handleSelectChange('facultyId')}
-            renderInput={(params) => <TextField {...params} label="Facultad" />}
+            renderInput={(params) => (
+              <TextField 
+                {...params} 
+                label="Facultad" 
+                required 
+              />
+            )}
           />
 
           <TextField
@@ -222,6 +234,7 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
             InputProps={{
               startAdornment: <InputAdornment position="start">$</InputAdornment>,
             }}
+            required
           />
 
           <Button
@@ -231,7 +244,7 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
             disabled={isPending}
             sx={{ alignSelf: 'flex-end', mt: 2 }}
           >
-            Crear Orden
+            {isPending ? <CircularProgress size={24} /> : 'Crear Orden'}
           </Button>
         </Box>
       </Card>
