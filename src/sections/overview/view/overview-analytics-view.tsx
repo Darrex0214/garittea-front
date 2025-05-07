@@ -1,21 +1,55 @@
+// src/sections/overview/overview-analytics-view.tsx
+
+import React from 'react';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+
+import { useQuery } from '@tanstack/react-query';
+import { dashboardService, FacultadTop } from 'src/api/services/dashboardService';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-
-import { AnalyticsNews } from '../analytics-news';
-import { AnalyticsTasks } from '../analytics-tasks';
-import { AnalyticsCurrentVisits } from '../analytics-current-visits';
-import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
-import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
-import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
-import { AnalyticsCurrentSubject } from '../analytics-current-subject';
+import { AnalyticsCurrentVisits } from '../analytics-current-visits';
+import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
+import { AnalyticsCurrentSubject } from '../analytics-current-subject';
+import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 
-// ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
+  // Fetch dashboard numbers
+  const { data: ventasMes, isLoading: loadingVentasMes, isError: errorVentasMes } =
+  useQuery<number, Error>({
+    queryKey: ['ventasCreditoMes'],
+    queryFn: dashboardService.getVentasCreditoMes,
+  });
+  
+  const { data: ventasPorMes, isLoading: loadingVentasPorMes } = useQuery<number[], Error>({
+    queryKey: ['ventasPorMes'],
+    queryFn: dashboardService.getVentasPorMes,
+  });
+
+  const { data: notasAnio, isLoading: loadingNotas, isError: errorNotas } =
+  useQuery<number, Error>({
+    queryKey: ['notasCreditoAnio'],
+    queryFn: dashboardService.getNotasCreditoAnio,
+  });
+
+const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
+  useQuery<FacultadTop[], Error>({
+    queryKey: ['facultadesTop'],
+    queryFn: dashboardService.getFacultadesTop,
+  });
+
+  const currentMonth = new Date().getMonth();
+  const current = ventasPorMes?.[currentMonth] ?? 0;
+  const previous = ventasPorMes?.[currentMonth - 1] ?? 0;
+  
+  const percentChange =
+    previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
+  
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
@@ -23,24 +57,27 @@ export function OverviewAnalyticsView() {
       </Typography>
 
       <Grid container spacing={3}>
+        {/* Total ventas a crédito mes actual */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Weekly sales"
-            percent={2.6}
-            total={714000}
+            title="Ventas a crédito (mes)"
+            percent={percentChange}
+            total={errorVentasMes ? 0 : ventasMes ?? 0}
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-bag.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
+              // keep the same dummy sparkline until you have real series
+              categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+              series: ventasPorMes ?? [],
             }}
           />
         </Grid>
 
+        {/* Total notas crédito año */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="New users"
-            percent={-0.1}
-            total={1352831}
+            title="Notas crédito (año)"
+            percent={2.1}
+            total={errorNotas ? 0 : notasAnio ?? 0}
             color="secondary"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
@@ -50,11 +87,12 @@ export function OverviewAnalyticsView() {
           />
         </Grid>
 
+        {/* Número de facultades top */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Purchase orders"
-            percent={2.8}
-            total={1723315}
+            title="Facultades Top"
+            percent={3.6}
+            total={errorTop ? 0 : facultadesTop?.length ?? 0}
             color="warning"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-buy.svg" />}
             chart={{
@@ -64,10 +102,11 @@ export function OverviewAnalyticsView() {
           />
         </Grid>
 
+        {/* Leave all other widgets unchanged */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Messages"
-            percent={3.6}
+            percent={-5.6}
             total={234}
             color="error"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-message.svg" />}

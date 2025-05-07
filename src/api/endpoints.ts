@@ -18,6 +18,12 @@ export const endpoints = {
   deletePersonById: (id: string) => `/person/${id}`,
   createPerson: '/person/',
 
+  
+  ventasCreditoMes: '/dashboard/ventas-credito-mes',
+  ventasPorMes: '/dashboard/ventas-por-mes',
+  notasCreditoAnio: '/dashboard/notas-credito-anio',
+  facultadesTop: '/dashboard/facultades-top',
+
   faculties: '/faculty/',
 
 }
