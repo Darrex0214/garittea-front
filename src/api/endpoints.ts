@@ -25,5 +25,9 @@ export const endpoints = {
   facultadesTop: '/dashboard/facultades-top',
 
   faculties: '/faculty/',
+  getFacultyById: (id: string) => `/faculty/${id}`,
+  updateFacultyById: (id: number) => `/faculty/${id}`,
+  deleteFacultyById: (id: number) => `/faculty/${id}`,
+  createFaculty: '/faculty/',
 
 }

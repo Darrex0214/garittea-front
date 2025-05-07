@@ -22,6 +22,7 @@ export const FileUploadPage = lazy(() => import('src/pages/fileUpload'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const ReportGeneratorPage = lazy(() => import('src/pages/report-generator'));
 export const PeopleView = lazy(() => import('src/pages/historyPeople'));
+export const FacultyView = lazy(() => import('src/pages/historyFaculty'));
 
 // ----------------------------------------------------------------------
 
@@ -68,7 +69,7 @@ export function Router() {
       children: [
         { index: true, element: <HomePage /> },   
         { path: 'personas', element: <PeopleView /> },       
-        { path: 'facultades', element: <HomePage /> },   
+        { path: 'facultades', element: <FacultyView /> },   
         { path: 'creditos', element: <HistoryPage /> },       
         { path: 'carga-reportes', element: <FileUploadPage />},
         { path: 'notas-credito', element: <NoteCreditPage />},
