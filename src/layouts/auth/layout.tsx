@@ -48,17 +48,7 @@ export function AuthLayout({ sx, children, header }: AuthLayoutProps) {
               <Alert severity="info" sx={{ display: 'none', borderRadius: 0 }}>
                 This is an info Alert.
               </Alert>
-            ),
-            rightArea: (
-              <Link
-                component={RouterLink}
-                href="#"
-                color="inherit"
-                sx={{ typography: 'subtitle2' }}
-              >
-                Need help?
-              </Link>
-            ),
+            )
           }}
         />
       }

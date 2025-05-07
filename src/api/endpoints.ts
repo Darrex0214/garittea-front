@@ -19,5 +19,9 @@ export const endpoints = {
   createPerson: '/person/',
 
   faculties: '/faculty/',
+  getFacultyById: (id: string) => `/faculty/${id}`,
+  updateFacultyById: (id: number) => `/faculty/${id}`,
+  deleteFacultyById: (id: number) => `/faculty/${id}`,
+  createFaculty: '/faculty/',
 
 }
