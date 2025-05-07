@@ -7,6 +7,16 @@ interface TotalResponse {
     debtamount: number;
 }
 
+interface TotalNotasResponse {
+    total: number;
+  }
+
+export interface NotasPorAnio {
+    year: number;
+    total: number;
+  }
+  
+
 export interface FacultadTop {
   faculty: number;
   _count: { idOrder: number };
@@ -24,12 +34,16 @@ export const dashboardService = {
     api
         .get<{ series: number[] }>(endpoints.ventasPorMes)
         .then((res) => res.data.series),
-        
+
   getNotasCreditoAnio: (): Promise<number> =>
     api
-      .get<TotalResponse>(endpoints.notasCreditoAnio)
-      .then((res) => res.data.debtamount),
+        .get<TotalNotasResponse>(endpoints.notasCreditoAnio)
+        .then((res) => res.data.total),
 
+  getNotasPorAnio: (): Promise<NotasPorAnio[]> =>
+    api
+        .get<{ series: NotasPorAnio[] }>(endpoints.notasPorAnio)
+        .then((res) => res.data.series),
   getFacultadesTop: (): Promise<FacultadTop[]> =>
     api
       .get<{ facultades: FacultadTop[] }>(endpoints.facultadesTop)

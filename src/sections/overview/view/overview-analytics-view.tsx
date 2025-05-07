@@ -37,6 +37,12 @@ export function OverviewAnalyticsView() {
     queryFn: dashboardService.getNotasCreditoAnio,
   });
 
+  const { data: notasPorAnio, isLoading: loadingNotasPorAnio, isError: errorNotasPorAnio,
+  } = useQuery({
+    queryKey: ['notasPorAnio'],
+    queryFn: dashboardService.getNotasPorAnio,
+  });
+
 const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
   useQuery<FacultadTop[], Error>({
     queryKey: ['facultadesTop'],
@@ -50,6 +56,18 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
   const percentChange =
     previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
   
+    const currentYearIndex = notasPorAnio?.length ? notasPorAnio.length - 1 : 0;
+    const currentNotas = notasPorAnio?.[currentYearIndex]?.total ?? 0;
+    const previousNotas = notasPorAnio?.[currentYearIndex - 1]?.total ?? 0;
+    
+    const percentNotas =
+      previousNotas > 0
+        ? ((currentNotas - previousNotas) / previousNotas) * 100
+        : currentNotas > 0
+        ? 100
+        : 0;
+    
+    
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
@@ -76,13 +94,13 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Notas crédito (año)"
-            percent={2.1}
+            percent={percentNotas }
             total={errorNotas ? 0 : notasAnio ?? 0}
             color="secondary"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 47, 40, 62, 73, 30, 23, 54],
+              categories: notasPorAnio?.map((item) => item.year.toString()) ?? [],
+              series: notasPorAnio?.map((item) => item.total) ?? [],
             }}
           />
         </Grid>

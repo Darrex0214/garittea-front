@@ -23,6 +23,8 @@ export const endpoints = {
   ventasPorMes: '/dashboard/ventas-por-mes',
   notasCreditoAnio: '/dashboard/notas-credito-anio',
   facultadesTop: '/dashboard/facultades-top',
+  notasPorAnio: '/dashboard/notas-por-anio',
+
 
   faculties: '/faculty/',
   getFacultyById: (id: string) => `/faculty/${id}`,
