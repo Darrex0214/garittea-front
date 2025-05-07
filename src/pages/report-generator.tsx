@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -14,6 +14,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
@@ -29,12 +30,12 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
+import * as XLSX from 'xlsx';
 
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Credit } from 'src/types/credit';
 import { useGetCredits } from 'src/api/services/creditService';
-import { CreditReport } from 'src/sections/reports/credit-report';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics-current-visits';
 import { Iconify } from 'src/components/iconify';
 
@@ -43,10 +44,6 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 // ----------------------------------------------------------------------
-
-const PDFDownloadLink = lazy(() => import('@react-pdf/renderer').then(module => ({
-  default: module.PDFDownloadLink
-})));
 
 const stateOptions = [
   { value: 0, label: 'Todos' },
@@ -93,6 +90,10 @@ export default function ReportGenerator() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [facultySearchQuery, setFacultySearchQuery] = useState('');
   
+  // Estados para la paginación
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
   // Estados para agregar nuevos usuarios
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [newUserId, setNewUserId] = useState('');
@@ -134,6 +135,21 @@ export default function ReportGenerator() {
     }),
     [credits, selectedState, startDate, endDate]
   );
+
+  // Para la paginación de la tabla
+  const paginatedCredits = useMemo(
+    () => filteredCredits.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [filteredCredits, page, rowsPerPage]
+  );
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   // Extraer usuarios únicos de los créditos
   const [uniqueUsers, setUniqueUsers] = useState<User[]>([]);
@@ -221,6 +237,26 @@ export default function ReportGenerator() {
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  // Función para exportar a Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredCredits.map(credit => ({
+        ID: credit.id,
+        Usuario: credit.user.name,
+        Solicitante: credit.applicant.name,
+        Deuda: credit.debtAmount,
+        Estado: getStateLabel(credit.state),
+        'Fecha de Creación': formatDate(credit.createdAt)
+      }))
+    );
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte de Créditos");
+    
+    // Guardar el archivo
+    XLSX.writeFile(workbook, "reporte-crediticio.xlsx");
   };
 
   if (loading) {
@@ -453,24 +489,13 @@ export default function ReportGenerator() {
                         />
                       </Box>
                     </Box>
-                    <Suspense fallback={<Button variant="contained" disabled>Cargando PDF...</Button>}>
-                      <PDFDownloadLink
-                        document={
-                          <CreditReport
-                            credits={filteredCredits}
-                            currentDate={new Date().toLocaleDateString()}
-                            getStateLabel={getStateLabel}
-                          />
-                        }
-                        fileName="reporte-crediticio.pdf"
-                      >
-                        {({ loading: pdfLoading }) => (
-                          <Button variant="contained" disabled={pdfLoading}>
-                            {pdfLoading ? 'Generando PDF...' : 'Descargar PDF'}
-                          </Button>
-                        )}
-                      </PDFDownloadLink>
-                    </Suspense>
+                    <Button 
+                      variant="contained" 
+                      onClick={exportToExcel}
+                      startIcon={<Iconify icon="mdi:microsoft-excel" />}
+                    >
+                      Exportar a Excel
+                    </Button>
                   </Box>
 
                   <TableContainer component={Paper}>
@@ -486,7 +511,7 @@ export default function ReportGenerator() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {filteredCredits.map((credit) => (
+                        {paginatedCredits.map((credit) => (
                           <TableRow key={credit.id}>
                             <TableCell>{credit.id}</TableCell>
                             <TableCell>{credit.user.name}</TableCell>
@@ -498,6 +523,17 @@ export default function ReportGenerator() {
                         ))}
                       </TableBody>
                     </Table>
+                    <TablePagination
+                      rowsPerPageOptions={[10, 20, 50, 100]}
+                      component="div"
+                      count={filteredCredits.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      onPageChange={handleChangePage}
+                      onRowsPerPageChange={handleChangeRowsPerPage}
+                      labelRowsPerPage="Filas por página:"
+                      labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+                    />
                   </TableContainer>
                 </Box>
               )}
