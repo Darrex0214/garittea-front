@@ -39,7 +39,7 @@ export function HistoryView() {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState('');
   const [createCreditModalOpen, setCreateCreditModalOpen] = useState(false);
-  const [creditCreatedSuccess, setCreditCreatedSuccess] = useState(false);
+
 
   const queryClient = useQueryClient();
 
@@ -330,19 +330,11 @@ export function HistoryView() {
   );
 
   const handleCreateCreditSuccess = () => {
-    setCreditCreatedSuccess(true);
-    setTimeout(() => {
-      setCreditCreatedSuccess(false);
-      setCreateCreditModalOpen(false);
-      refetch(); // Recarga los datos del historial
-    }, 1500); // Duración de la animación
+    setCreateCreditModalOpen(false);
+    refetch(); // Recarga los datos del historial
   };
 
-  const handleCloseCreateCreditModal = () => {
-    setCreateCreditModalOpen(false);
-    setCreditCreatedSuccess(false);
-    refetch(); // Recarga los datos al cerrar el modal
-  };
+
 
   if (isPending) return <Box display="flex" justifyContent="center" mt={5}><CircularProgress /></Box>;
   if (isError) return <Typography color="error">Error al cargar los créditos.</Typography>;
@@ -381,21 +373,19 @@ export function HistoryView() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
+
       <Dialog
         open={createCreditModalOpen}
-        onClose={handleCloseCreateCreditModal}
+        onClose={() => setCreateCreditModalOpen(false)}
         TransitionComponent={Transition}
         keepMounted
+        key={createCreditModalOpen ? 'modal-open' : 'modal-closed'} // Esto fuerza un remount
       >
         <DialogTitle>Crear Nuevo Crédito</DialogTitle>
         <DialogContent>
-          <CreateCreditView onSuccess={handleCreateCreditSuccess} />
-          <Collapse in={creditCreatedSuccess}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-              <CheckCircleOutlineIcon color="success" sx={{ mr: 1 }} />
-              <Typography variant="body2" color="success">Crédito creado exitosamente.</Typography>
-            </Box>
-          </Collapse>
+          {createCreditModalOpen && ( // Esto asegura que se renderice solo cuando está abierto
+            <CreateCreditView onSuccess={handleCreateCreditSuccess} />
+          )}
         </DialogContent>
       </Dialog>
 
