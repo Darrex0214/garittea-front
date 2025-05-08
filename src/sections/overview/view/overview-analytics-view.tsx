@@ -60,6 +60,17 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
     queryFn: dashboardService.getCarteraPagadaUltimosAnios,
   });
 
+  const { data: carteraMorosa, isLoading: loadingCarteraMorosa, isError: errorCarteraMorosa } =
+  useQuery<number, Error>({
+    queryKey: ['carteraMorosaAnio'],
+    queryFn: dashboardService.getCarteraMorosaAnio,
+  });
+
+  const { data: carteraMorosaAnios, isLoading: loadingCarteraMorosaAnios } = useQuery({
+    queryKey: ['carteraMorosaAnios'],
+    queryFn: dashboardService.getCarteraMorosaUltimosAnios,
+  });
+
   const currentMonth = new Date().getMonth();
   const current = ventasPorMes?.[currentMonth] ?? 0;
   const previous = ventasPorMes?.[currentMonth - 1] ?? 0;
@@ -67,16 +78,16 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
   const percentChange =
     previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
   
-    const currentYearIndex = notasPorAnio?.length ? notasPorAnio.length - 1 : 0;
-    const currentNotas = notasPorAnio?.[currentYearIndex]?.total ?? 0;
-    const previousNotas = notasPorAnio?.[currentYearIndex - 1]?.total ?? 0;
-    
-    const percentNotas =
-      previousNotas > 0
-        ? ((currentNotas - previousNotas) / previousNotas) * 100
-        : currentNotas > 0
-        ? 100
-        : 0;
+  const currentYearIndex = notasPorAnio?.length ? notasPorAnio.length - 1 : 0;
+  const currentNotas = notasPorAnio?.[currentYearIndex]?.total ?? 0;
+  const previousNotas = notasPorAnio?.[currentYearIndex - 1]?.total ?? 0;
+  
+  const percentNotas =
+    previousNotas > 0
+      ? ((currentNotas - previousNotas) / previousNotas) * 100
+      : currentNotas > 0
+      ? 100
+      : 0;
   const currentIndex = carteraAnual?.length ? carteraAnual.length - 1 : 0;
   const currentCartera = carteraAnual?.[currentIndex]?.total ?? 0;
   const previousCartera = carteraAnual?.[currentIndex - 1]?.total ?? 0;
@@ -84,6 +95,12 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
   const percentCartera =
     previous > 0 ? ((currentCartera - previousCartera) / previousCartera) * 100 : current > 0 ? 100 : 0;
     
+  const currentIndexMorosa = carteraMorosaAnios?.length ? carteraMorosaAnios.length - 1 : 0;
+  const currentMorosa = carteraMorosaAnios?.[currentIndexMorosa]?.total ?? 0;
+  const previousMorosa = carteraMorosaAnios?.[currentIndexMorosa - 1]?.total ?? 0;
+  
+  const percentCarteraMorosa =
+    previousMorosa > 0 ? ((currentMorosa - previousMorosa) / previousMorosa) * 100 : currentMorosa > 0 ? 100 : 0;
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
@@ -139,14 +156,14 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
         {/* Leave all other widgets unchanged */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Messages"
-            percent={-5.6}
-            total={234}
+            title="Cartera morosa (año)"
+            percent={percentCarteraMorosa} // Puedes calcular un porcentaje si comparas con otro año
+            total={errorCarteraMorosa ? 0 : carteraMorosa ?? 0}
             color="error"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-message.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 30, 23, 54, 47, 40, 62, 73],
+              categories: carteraMorosaAnios?.map((item) => item.year.toString()) ?? [],
+              series: carteraMorosaAnios?.map((item) => item.total) ?? [],
             }}
           />
         </Grid>
@@ -180,45 +197,6 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={8}>
-          <AnalyticsConversionRates
-            title="Conversion rates"
-            subheader="(+43%) than last year"
-            chart={{
-              categories: ['Italy', 'Japan', 'China', 'Canada', 'France'],
-              series: [
-                { name: '2022', data: [44, 55, 41, 64, 22] },
-                { name: '2023', data: [53, 32, 33, 52, 13] },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={4}>
-          <AnalyticsCurrentSubject
-            title="Current subject"
-            chart={{
-              categories: ['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math'],
-              series: [
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={4}>
-          <AnalyticsTrafficBySite
-            title="Traffic by site"
-            list={[
-              { value: 'facebook', label: 'Facebook', total: 323234 },
-              { value: 'google', label: 'Google', total: 341212 },
-              { value: 'linkedin', label: 'Linkedin', total: 411213 },
-              { value: 'twitter', label: 'Twitter', total: 443232 },
-            ]}
-          />
-        </Grid>
       </Grid>
     </DashboardContent>
   );

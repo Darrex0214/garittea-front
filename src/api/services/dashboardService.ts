@@ -62,4 +62,14 @@ export const dashboardService = {
     api
       .get<{ series: CarteraAnual[] }>(endpoints.carteraPagadaAnios)
       .then((res) => res.data.series),
+
+  getCarteraMorosaAnio: (): Promise<number> =>
+    api
+      .get<{ total: number }>(endpoints.carteraMorosaAnio)
+      .then((res) => res.data.total),
+
+  getCarteraMorosaUltimosAnios: (): Promise<{ year: number; total: number }[]> =>
+    api
+      .get<{ data: { year: number; total: number }[] }>(endpoints.carteraMorosaAnios)
+      .then((res) => res.data.data),
 };
