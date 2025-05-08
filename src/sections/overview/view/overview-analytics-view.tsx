@@ -49,6 +49,17 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
     queryFn: dashboardService.getFacultadesTop,
   });
 
+  const { data: carteraPagada, isLoading: loadingCarteraPagada, isError: errorCarteraPagada } =
+  useQuery<number, Error>({
+    queryKey: ['carteraPagadaAnio'],
+    queryFn: dashboardService.getCarteraPagadaAnio,
+  });
+
+  const { data: carteraAnual, isLoading, isError } = useQuery({
+    queryKey: ['carteraPagadaUltimosAnios'],
+    queryFn: dashboardService.getCarteraPagadaUltimosAnios,
+  });
+
   const currentMonth = new Date().getMonth();
   const current = ventasPorMes?.[currentMonth] ?? 0;
   const previous = ventasPorMes?.[currentMonth - 1] ?? 0;
@@ -66,7 +77,12 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
         : currentNotas > 0
         ? 100
         : 0;
-    
+  const currentIndex = carteraAnual?.length ? carteraAnual.length - 1 : 0;
+  const currentCartera = carteraAnual?.[currentIndex]?.total ?? 0;
+  const previousCartera = carteraAnual?.[currentIndex - 1]?.total ?? 0;
+  
+  const percentCartera =
+    previous > 0 ? ((currentCartera - previousCartera) / previousCartera) * 100 : current > 0 ? 100 : 0;
     
   return (
     <DashboardContent maxWidth="xl">
@@ -105,17 +121,17 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
           />
         </Grid>
 
-        {/* Número de facultades top */}
+        {/* Cartera pagada (año) */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Facultades Top"
-            percent={3.6}
-            total={errorTop ? 0 : facultadesTop?.length ?? 0}
+            title="Cartera pagada (año)"
+            percent={percentCartera} // puedes calcular un porcentaje real más adelante
+            total={errorCarteraPagada ? 0 : carteraPagada ?? 0}
             color="warning"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-buy.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [40, 70, 50, 28, 70, 75, 7, 64],
+              categories: carteraAnual?.map((item) => item.year.toString()) ?? [],
+              series: carteraAnual?.map((item) => item.total) ?? [],
             }}
           />
         </Grid>

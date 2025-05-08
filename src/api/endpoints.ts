@@ -24,7 +24,8 @@ export const endpoints = {
   notasCreditoAnio: '/dashboard/notas-credito-anio',
   facultadesTop: '/dashboard/facultades-top',
   notasPorAnio: '/dashboard/notas-por-anio',
-
+  carteraPagadaAnio: '/dashboard/cartera-pagada-anio',
+  carteraPagadaAnios: '/dashboard/cartera-pagada-anios',
 
   faculties: '/faculty/',
   getFacultyById: (id: string) => `/faculty/${id}`,

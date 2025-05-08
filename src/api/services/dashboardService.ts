@@ -23,6 +23,11 @@ export interface FacultadTop {
   name: string;
 }
 
+export interface CarteraAnual {
+  year: number;
+  total: number;
+}
+
 export const dashboardService = {
 
   getVentasCreditoMes: (): Promise<number> =>
@@ -48,4 +53,13 @@ export const dashboardService = {
     api
       .get<{ facultades: FacultadTop[] }>(endpoints.facultadesTop)
       .then((res) => res.data.facultades),
+  getCarteraPagadaAnio: (): Promise<number> =>
+    api
+      .get<{ total: number }>(endpoints.carteraPagadaAnio)
+      .then((res) => res.data.total),
+
+  getCarteraPagadaUltimosAnios: (): Promise<CarteraAnual[]> =>
+    api
+      .get<{ series: CarteraAnual[] }>(endpoints.carteraPagadaAnios)
+      .then((res) => res.data.series),
 };
