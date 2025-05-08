@@ -136,28 +136,29 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AnalyticsCurrentVisits
-            title="Current visits"
-            chart={{
-              series: [
-                { label: 'America', value: 3500 },
-                { label: 'Asia', value: 2500 },
-                { label: 'Europe', value: 1500 },
-                { label: 'Africa', value: 500 },
-              ],
-            }}
+        <AnalyticsCurrentVisits
+          title="Facultades con más ventas a crédito"
+          chart={{
+            series: facultadesTop?.map((f) => ({
+              label: f.name,
+              value: f._count.idOrder,
+            })) ?? [],
+            colors: ['#2065D1', '#22C55E', '#FF5630', '#FFC107', '#8E24AA'],
+          }}
           />
         </Grid>
 
         <Grid xs={12} md={6} lg={8}>
           <AnalyticsWebsiteVisits
-            title="Website visits"
-            subheader="(+43%) than last year"
+            title="Ventas a crédito por mes"
+            subheader="Comparativo mensual del año actual"
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
               series: [
-                { name: 'Team A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-                { name: 'Team B', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
+                {
+                  name: 'Ventas',
+                  data: ventasPorMes ?? [],
+                },
               ],
             }}
           />
