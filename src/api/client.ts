@@ -5,7 +5,7 @@ import axios from 'axios'
 console.log('Base URL:', import.meta.env.VITE_BACK_BASE_URL);
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACK_BASE_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_BACK_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
