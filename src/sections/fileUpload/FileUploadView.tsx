@@ -1,5 +1,5 @@
 // src/sections/fileUpload/FileUploadView.tsx
-import React, { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Box,
   Typography,
@@ -23,11 +23,13 @@ const Input = styled('input')({
 export function FileUploadView() {
   const [errorDialog, setErrorDialog] = useState('');
   const [successData, setSuccessData] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
 
   const { mutate: getAssociatedNotes, isPending } = useGetAssociatedNotes({
     onSuccess: (results) => {
       if (!results.length) {
-        setErrorDialog('No se encontraron facturas con cambios.');
+        setErrorDialog('No se encontraron facturas con notas asociadas.');
         setSuccessData([]);
       } else {
         setSuccessData(results);
@@ -80,7 +82,7 @@ export function FileUploadView() {
     const worksheet = XLSX.utils.json_to_sheet(successData.map(item => ({
       'Nota Crédito': item.idNote,
       'Factura Inicial': item.idInitialBill,
-      'Factura Reemplazada': item.idFinalBill || '',
+      'Factura Reemplazo': item.idFinalBill || '',
       'Motivo': item.reason,
       'Valor': item.amount,
     })));
@@ -99,11 +101,17 @@ export function FileUploadView() {
         </Typography>
        
         <label htmlFor="file-upload">
-          <input
+         <input
+            ref={fileInputRef}
             id="file-upload"
             type="file"
             accept=".xlsx, .xls"
-            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                handleFile(e.target.files[0]);
+                e.target.value = ''; // ← Limpia el valor para permitir cargar el mismo archivo de nuevo
+              }
+            }}
             style={{ display: 'none' }}
           />
           <Button variant="contained" startIcon={<CloudUploadIcon />} component="span">

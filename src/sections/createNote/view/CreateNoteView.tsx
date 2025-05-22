@@ -16,6 +16,7 @@ export function CreateNoteCreditView() {
   const [formData, setFormData] = useState({
     initialBillId: '',
     finalBillId: '',
+    idcreditNote: '',
     valor: '',
     motivo: '',
   });
@@ -41,8 +42,8 @@ export function CreateNoteCreditView() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!formData.initialBillId || !formData.valor || !formData.motivo) {
-      setErrorMessage('Los campos "Factura Inicial", "Valor" y "Motivo" son obligatorios.');
+    if (!formData.initialBillId || !formData.valor || !formData.motivo || !formData.idcreditNote) {
+      setErrorMessage('Debe llenar todos los campos obligatorios.');
       setErrorModalOpen(true);
       return;
     }
@@ -50,6 +51,7 @@ export function CreateNoteCreditView() {
     createNote({
       initialBillId: parseInt(formData.initialBillId, 10),
       finalBillId: formData.finalBillId ? parseInt(formData.finalBillId, 10) : undefined,
+      idcreditNote: parseInt(formData.idcreditNote, 10),
       amount: parseFloat(formData.valor),
       reason: formData.motivo,
     });
@@ -77,6 +79,15 @@ export function CreateNoteCreditView() {
           value={formData.finalBillId}
           onChange={handleInputChange}
           fullWidth
+          margin="normal"
+        />
+         <TextField
+          label="ID Nota Crédito"
+          name="idcreditNote"
+          value={formData.idcreditNote}
+          onChange={handleInputChange}
+          fullWidth
+          required
           margin="normal"
         />
         <TextField

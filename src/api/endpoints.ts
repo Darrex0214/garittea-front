@@ -1,7 +1,3 @@
-import { People } from "@mui/icons-material";
-import { updateCacheWithNewRows } from "@mui/x-data-grid/hooks/features/rows/gridRowsUtils";
-import { create } from "domain";
-
 // src/api/endpoints.ts
 export const endpoints = {
   credits: '/credits',

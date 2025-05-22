@@ -8,6 +8,7 @@ export const creditNoteService = {
   createCreditNote: async (data: {
     initialBillId: number;
     finalBillId?: number;
+    idcreditNote: number;
     amount: number;
     reason: string;
   }) => {
