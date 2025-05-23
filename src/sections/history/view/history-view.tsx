@@ -136,7 +136,7 @@ export function HistoryView() {
       case 3:
         return { text: 'Pagado', color: '#2e7d32' };
       case 4:
-        return { text: 'Aceptado', color: '#d32f2f' };
+        return { text: 'Generado', color: '#d32f2f' };
       default:
         return { text: 'Desconocido', color: '#757575' };
     }
@@ -294,7 +294,7 @@ export function HistoryView() {
               {optionCredit.state === 1 && <MenuItem value={1}>Pendiente</MenuItem>}
               {optionCredit.state === 1 && <MenuItem value={3}>Pagado</MenuItem>}
               
-              {optionCredit.state === 4 && <MenuItem value={4}>Aceptado</MenuItem>}
+              {optionCredit.state === 4 && <MenuItem value={4}>Generado</MenuItem>}
               {optionCredit.state === 4 && <MenuItem value={1}>Pendiente</MenuItem>}
               {optionCredit.state === 4 && <MenuItem value={3}>Pagado</MenuItem>}
               
@@ -302,7 +302,7 @@ export function HistoryView() {
                 [
                   <MenuItem key="1" value={1}>Pendiente</MenuItem>,
                   <MenuItem key="3" value={3}>Pagado</MenuItem>,
-                  <MenuItem key="4" value={4}>Aceptado</MenuItem>
+                  <MenuItem key="4" value={4}>Generado</MenuItem>
                 ]
               )}
             </Select>
