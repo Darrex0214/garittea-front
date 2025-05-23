@@ -71,6 +71,7 @@ export const SearchFilterModal: React.FC<SearchFilterModalProps> = ({
             <MenuItem value="1">Pendiente</MenuItem>
             <MenuItem value="2">Nota crédito</MenuItem>
             <MenuItem value="3">Pagado</MenuItem>
+            <MenuItem value="4">Aceptado</MenuItem>
           </Select>
         </FormControl>
       </DialogContent>
