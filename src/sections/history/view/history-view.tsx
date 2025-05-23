@@ -39,9 +39,16 @@ export function HistoryView() {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState('');
   const [createCreditModalOpen, setCreateCreditModalOpen] = useState(false);
+  const [originalCreditState, setOriginalCreditState] = useState<number | null>(null);
 
 
   const queryClient = useQueryClient();
+
+  const openEditModal = (credit: Credit) => {
+    setOptionCredit(credit);
+    setOriginalCreditState(credit.state); // Guarda el estado original
+    setEditModalOpen(true);
+  };
 
   // Consulta que se actualiza según los filtros
   const { data: creditData, isPending, isError, refetch } = useQuery<Credit[]>({
@@ -128,6 +135,8 @@ export function HistoryView() {
         return { text: 'Nota crédito', color: '#f9a825' };
       case 3:
         return { text: 'Pagado', color: '#2e7d32' };
+      case 4:
+        return { text: 'Aceptado', color: '#d32f2f' };
       default:
         return { text: 'Desconocido', color: '#757575' };
     }
@@ -143,7 +152,7 @@ export function HistoryView() {
             <TableCell>Solicitante</TableCell>
             <TableCell>Deuda</TableCell>
             <TableCell>Estado</TableCell>
-            <TableCell align="right">Opción</TableCell>
+            <TableCell width="5%">Opción</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -185,15 +194,17 @@ export function HistoryView() {
       anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
       transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
       <MenuList sx={{ p: 0.5, gap: 0.5, width: 140, display: 'flex', flexDirection: 'column', [`& .${menuItemClasses.root}`]: { px: 1, gap: 2, borderRadius: 0.75, [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' } } }}>
-        <MenuItem
-          onClick={() => {
-            setOptionAnchorEl(null);
-            setEditModalOpen(true);
-          }}
-        >
-          <Iconify icon="solar:pen-bold" />
-          Editar
-        </MenuItem>
+        {optionCredit && optionCredit.state !== 2 && optionCredit.state !== 3 && (
+          <MenuItem
+            onClick={() => {
+              setOptionAnchorEl(null);
+              openEditModal(optionCredit!);
+            }}
+          >
+            <Iconify icon="solar:pen-bold" />
+            Editar
+          </MenuItem>
+        )}
         <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
           <Iconify icon="solar:trash-bin-trash-bold" />Eliminar
         </MenuItem>
@@ -254,6 +265,18 @@ export function HistoryView() {
             />
 
             {/* Campo para editar estado */}
+            {originalCreditState === 3 ? (
+            /* Si está Pagado, mostrar mensaje informativo */
+            <Typography color="success.main" sx={{ mt: 2, fontWeight: 'medium' }}>
+              Este crédito está Pagado y no se puede cambiar su estado.
+            </Typography>
+            ) : originalCreditState === 2 ? (
+              /* Si es Nota Crédito, mostrar mensaje informativo */
+              <Typography color="warning.main" sx={{ mt: 2, fontWeight: 'medium' }}>
+                El estado no puede ser modificado para notas de crédito.
+              </Typography>
+            ) : (
+            /* Para otros estados (Pendiente o Aceptado), mostrar opciones permitidas */
             <Select
               label="Estado"
               value={optionCredit.state}
@@ -267,10 +290,23 @@ export function HistoryView() {
               displayEmpty
               sx={{ mt: 2, borderRadius: 2 }}
             >
-              <MenuItem value={1}>Pendiente</MenuItem>
-              <MenuItem value={2}>Nota Crédito</MenuItem>
-              <MenuItem value={3}>Pagado</MenuItem>
+              {/* Renderizar cada MenuItem directamente (sin fragmentos) */}
+              {optionCredit.state === 1 && <MenuItem value={1}>Pendiente</MenuItem>}
+              {optionCredit.state === 1 && <MenuItem value={3}>Pagado</MenuItem>}
+              
+              {optionCredit.state === 4 && <MenuItem value={4}>Aceptado</MenuItem>}
+              {optionCredit.state === 4 && <MenuItem value={1}>Pendiente</MenuItem>}
+              {optionCredit.state === 4 && <MenuItem value={3}>Pagado</MenuItem>}
+              
+              {optionCredit.state !== 1 && optionCredit.state !== 4 && (
+                [
+                  <MenuItem key="1" value={1}>Pendiente</MenuItem>,
+                  <MenuItem key="3" value={3}>Pagado</MenuItem>,
+                  <MenuItem key="4" value={4}>Aceptado</MenuItem>
+                ]
+              )}
             </Select>
+          )}
 
             {/* Botones */}
             <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
