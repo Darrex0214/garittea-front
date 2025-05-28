@@ -1,3 +1,10 @@
+export type Bill = {
+  id: number;
+  idBill: number;
+  billdate: Date;
+  state: string;
+}
+
 export type Credit = {
   id: number;
   user: {
@@ -22,4 +29,5 @@ export type Credit = {
   debtAmount: number;
   createdAt: Date;
   state: number;
+  bills: Bill[];
 }

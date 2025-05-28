@@ -40,6 +40,8 @@ export function HistoryView() {
   const [errorModalMessage, setErrorModalMessage] = useState('');
   const [createCreditModalOpen, setCreateCreditModalOpen] = useState(false);
   const [originalCreditState, setOriginalCreditState] = useState<number | null>(null);
+  const [billId, setBillId] = useState<string>('');
+  const [billDate, setBillDate] = useState<Date | null>(new Date());
 
 
   const queryClient = useQueryClient();
@@ -130,13 +132,13 @@ export function HistoryView() {
   const getEstadoTexto = (estado: number) => {
     switch (estado) {
       case 1:
-        return { text: 'Pendiente', color: '#c62828' };
+        return { text: 'Pendiente', color: '#e67e22' };
       case 2:
-        return { text: 'Nota crédito', color: '#f9a825' };
+        return { text: 'Nota crédito', color: '#8e44ad' };
       case 3:
-        return { text: 'Pagado', color: '#2e7d32' };
+        return { text: 'Pagado', color: '#27ae60' };
       case 4:
-        return { text: 'Generado', color: '#d32f2f' };
+        return { text: 'Generado', color: '#3498db' };
       default:
         return { text: 'Desconocido', color: '#757575' };
     }
@@ -147,22 +149,23 @@ export function HistoryView() {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Usuario</TableCell>
-            <TableCell>Solicitante</TableCell>
-            <TableCell>Deuda</TableCell>
-            <TableCell>Estado</TableCell>
-            <TableCell width="5%">Opción</TableCell>
+            <TableCell align="center" width="5%">ID</TableCell>
+            <TableCell align="center" width="15%">Solicitante</TableCell>
+            <TableCell align="center" width="15%">Facultad</TableCell> {/* Nueva columna */}
+            <TableCell align="center" width="10%">Deuda</TableCell>
+            <TableCell align="center" width="10%">Estado</TableCell>
+            <TableCell align="center" width="10%">Factura</TableCell> {/* Nueva columna */}
+            <TableCell align="center" width="5%">Opción</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {displayData.map((credit, index) => (
             <TableRow key={credit.id} hover onClick={() => setSelectedCredit(credit)} sx={{ cursor: 'pointer' }}>
-              <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-              <TableCell>{`${credit.user.name} ${credit.user.lastName}`}</TableCell>
-              <TableCell>{`${credit.applicant.name} ${credit.applicant.lastName}`}</TableCell>
-              <TableCell>${credit.debtAmount.toLocaleString()}</TableCell>
-              <TableCell sx={{
+              <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
+              <TableCell align="center">{`${credit.applicant.name} ${credit.applicant.lastName}`}</TableCell>
+              <TableCell align="center">{credit.faculty.name}</TableCell>
+              <TableCell align="center">${credit.debtAmount.toLocaleString()}</TableCell>
+              <TableCell align="center" sx={{
                 color: getEstadoTexto(credit.state).color,
                 fontWeight: 'bold',
                 backgroundColor: alpha(getEstadoTexto(credit.state).color, 0.15),
@@ -170,9 +173,40 @@ export function HistoryView() {
                 borderRadius: '4px',
                 display: 'inline-block',
                 marginTop: '18px',
+                marginLeft: '58px'
               }}>
                 {getEstadoTexto(credit.state).text}
               </TableCell>
+
+              <TableCell align="center">
+                {credit.bills && credit.bills.length > 0 ? (
+                  // Mostrar el número de factura en lugar del ícono
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      color: '#2e7d32',
+                      backgroundColor: alpha('#2e7d32', 0.1),
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-block'
+                    }}
+                  >
+                    #{credit.bills[0].idBill}
+                  </Typography>
+                ) : (
+                  // Centrar el ícono cuando no hay factura
+                  <Box display="flex" justifyContent="center">
+                    <Iconify 
+                      icon="mdi:file-document-remove" 
+                      width={24} 
+                      height={24} 
+                      sx={{ color: '#c62828' }}
+                    />
+                  </Box>
+                )}
+              </TableCell>
+
               <TableCell align="right">
                 <IconButton onClick={(e) => {
                   e.stopPropagation();
@@ -266,47 +300,97 @@ export function HistoryView() {
 
             {/* Campo para editar estado */}
             {originalCreditState === 3 ? (
-            /* Si está Pagado, mostrar mensaje informativo */
-            <Typography color="success.main" sx={{ mt: 2, fontWeight: 'medium' }}>
-              Este crédito está Pagado y no se puede cambiar su estado.
-            </Typography>
+              /* Si está Pagado, mostrar mensaje informativo */
+              <Typography color="success.main" sx={{ mt: 2, fontWeight: 'medium' }}>
+                Este crédito está Pagado y no se puede cambiar su estado.
+              </Typography>
             ) : originalCreditState === 2 ? (
               /* Si es Nota Crédito, mostrar mensaje informativo */
               <Typography color="warning.main" sx={{ mt: 2, fontWeight: 'medium' }}>
                 El estado no puede ser modificado para notas de crédito.
               </Typography>
             ) : (
-            /* Para otros estados (Pendiente o Aceptado), mostrar opciones permitidas */
-            <Select
-              label="Estado"
-              value={optionCredit.state}
-              onChange={(e) =>
-                setOptionCredit((prev) =>
-                  prev ? { ...prev, state: Number(e.target.value) } : null
-                )
-              }
-              fullWidth
-              size="small"
-              displayEmpty
-              sx={{ mt: 2, borderRadius: 2 }}
-            >
-              {/* Renderizar cada MenuItem directamente (sin fragmentos) */}
-              {optionCredit.state === 1 && <MenuItem value={1}>Pendiente</MenuItem>}
-              {optionCredit.state === 1 && <MenuItem value={3}>Pagado</MenuItem>}
-              
-              {optionCredit.state === 4 && <MenuItem value={4}>Generado</MenuItem>}
-              {optionCredit.state === 4 && <MenuItem value={1}>Pendiente</MenuItem>}
-              {optionCredit.state === 4 && <MenuItem value={3}>Pagado</MenuItem>}
-              
-              {optionCredit.state !== 1 && optionCredit.state !== 4 && (
-                [
-                  <MenuItem key="1" value={1}>Pendiente</MenuItem>,
-                  <MenuItem key="3" value={3}>Pagado</MenuItem>,
-                  <MenuItem key="4" value={4}>Generado</MenuItem>
-                ]
-              )}
-            </Select>
-          )}
+              /* Para otros estados (Pendiente o Generado), mostrar opciones permitidas */
+              <Select
+                label="Estado"
+                value={optionCredit.state}
+                onChange={(e) =>
+                  setOptionCredit((prev) =>
+                    prev ? { ...prev, state: Number(e.target.value) } : null
+                  )
+                }
+                fullWidth
+                size="small"
+                displayEmpty
+                sx={{ mt: 2, borderRadius: 2 }}
+              >
+                {/* Renderizar cada MenuItem directamente */}
+                {optionCredit.state === 1 && <MenuItem value={1}>Pendiente</MenuItem>}
+                {optionCredit.state === 1 && <MenuItem value={3}>Pagado</MenuItem>}
+                
+                {optionCredit.state === 4 && <MenuItem value={4}>Generado</MenuItem>}
+                {optionCredit.state === 4 && <MenuItem value={1}>Pendiente</MenuItem>}
+                {optionCredit.state === 4 && <MenuItem value={3}>Pagado</MenuItem>}
+                
+                {optionCredit.state !== 1 && optionCredit.state !== 4 && (
+                  [
+                    <MenuItem key="1" value={1}>Pendiente</MenuItem>,
+                    <MenuItem key="3" value={3}>Pagado</MenuItem>,
+                    <MenuItem key="4" value={4}>Generado</MenuItem>
+                  ]
+                )}
+              </Select>
+            )}
+
+            {/* Campo para ID de factura cuando el estado es Generado (4) */}
+            {optionCredit.state === 4 && (
+              <>
+                <TextField
+                  label="ID de Factura"
+                  type="number"
+                  value={billId}
+                  onChange={(e) => setBillId(e.target.value)}
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                  required
+                  helperText="Ingrese el ID de la factura a asociar"
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                    },
+                  }}
+                />
+                
+                {/* Nuevo campo para fecha de factura */}
+                <TextField
+                  label="Fecha de Factura"
+                  type="date"
+                  value={billDate ? billDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setBillDate(new Date(e.target.value));
+                    } else {
+                      // Si intentan borrar, mantener la fecha actual
+                      setBillDate(new Date());
+                    }
+                  }}
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                  required
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  helperText="Seleccione la fecha de la factura"
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                    },
+                  }}
+                />
+              </>
+            )}
 
             {/* Botones */}
             <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
@@ -316,17 +400,70 @@ export function HistoryView() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => {
+                onClick={async () => {
                   if (optionCredit) {
-                    updateMutation.mutate({
-                      id: optionCredit.id.toString(),
-                      data: {
-                        debtAmount: optionCredit.debtAmount,
-                        state: optionCredit.state,
-                      },
-                    });
-                    setEditModalOpen(false);
-                    setOptionCredit(null);
+                    // Validaciones específicas
+                    
+                    // Verificar cambio de Pendiente (1) a Pagado (3)
+                    if (originalCreditState === 1 && optionCredit.state === 3) {
+                      // Verificar si tiene facturas asociadas
+                      if (!optionCredit.bills || optionCredit.bills.length === 0) {
+                        setErrorModalMessage("No se puede cambiar a Pagado sin una factura asociada");
+                        setErrorModalOpen(true);
+                        return;
+                      }
+                    }
+                    
+                    if (optionCredit.state === 4) {
+                      if (!billId || billId.trim() === '') {
+                        setErrorModalMessage("Debe ingresar un ID de factura para el estado Generado");
+                        setErrorModalOpen(true);
+                        return;
+                      }
+                      
+                      if (!billDate) {
+                        setErrorModalMessage("Debe seleccionar una fecha para la factura");
+                        setErrorModalOpen(true);
+                        return;
+                      }
+                    }
+                                        
+                    try {
+                      if (optionCredit.state === 4 && billId) {
+                        await updateMutation.mutate({
+                          id: optionCredit.id.toString(),
+                          data: {
+                            debtAmount: optionCredit.debtAmount,
+                            state: optionCredit.state,
+                            bills: 
+                            [
+                              {
+                                idBill: parseInt(billId, 10),
+                                id: 0,
+                                billdate: billDate || new Date(),
+                                state: "active"
+                              }
+                            ]
+                          },
+                        });
+                      } else {
+                        updateMutation.mutate({
+                          id: optionCredit.id.toString(),
+                          data: {
+                            debtAmount: optionCredit.debtAmount,
+                            state: optionCredit.state,
+                          },
+                        });
+                      }
+                      
+                      setEditModalOpen(false);
+                      setOptionCredit(null);
+                      setBillId(''); // Limpiar el ID de factura
+                    } catch (error: any) {
+                      console.error("Error al actualizar:", error);
+                      setErrorModalMessage(error.response?.data?.error || "Error al actualizar el crédito");
+                      setErrorModalOpen(true);
+                    }
                   }
                 }}
               >
