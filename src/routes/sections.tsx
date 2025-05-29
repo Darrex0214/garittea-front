@@ -23,6 +23,7 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const ReportGeneratorPage = lazy(() => import('src/pages/report-generator'));
 export const PeopleView = lazy(() => import('src/pages/historyPeople'));
 export const FacultyView = lazy(() => import('src/pages/historyFaculty'));
+export const UserManageView = lazy(() => import('src/pages/userManage'));
 
 // ----------------------------------------------------------------------
 
@@ -76,6 +77,7 @@ export function Router() {
         { path: 'creacion-notas', element: <CreateNotePage />},
         { path: 'reportes', element: <BlogPage />},
         { path: 'report-generator', element: <ReportGeneratorPage />},
+        { path: 'gestion-usuarios', element: <UserManageView />},
       ],
     },
     { path: '404', element: <Page404 /> },
