@@ -32,4 +32,11 @@ export const endpoints = {
   deleteFacultyById: (id: number) => `/faculty/${id}`,
   createFaculty: '/faculty/',
 
+  users: '/users',
+  getUserById: (id: string) => `/users/${id}`,
+  searchUsers: '/users/search',
+  createUser: '/users',
+  updateUserById: (id: string) => `/users/${id}`,
+  deleteUserById: (id: string) => `/users/${id}`,
+
 }
