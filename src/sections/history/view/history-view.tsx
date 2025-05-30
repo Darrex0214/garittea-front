@@ -47,9 +47,19 @@ export function HistoryView() {
   const queryClient = useQueryClient();
 
   const openEditModal = (credit: Credit) => {
-    setOptionCredit(credit);
-    setOriginalCreditState(credit.state); // Guarda el estado original
+    // Create a deep copy of the credit to avoid reference issues
+    setOptionCredit({...credit});
+    setOriginalCreditState(credit.state);
     setEditModalOpen(true);
+    
+    // Reset other related fields
+    if (credit.bills && credit.bills.length > 0) {
+      setBillId(credit.bills[0].idBill.toString());
+      setBillDate(new Date(credit.bills[0].billdate));
+    } else {
+      setBillId('');
+      setBillDate(new Date());
+    }
   };
 
   // Consulta que se actualiza según los filtros
@@ -276,27 +286,30 @@ export function HistoryView() {
       >
         {optionCredit && (
           <>
-            <Typography>ID: {optionCredit.id}</Typography>
+            {originalCreditState === 4 && (
+              <>
+                <Typography>ID: {optionCredit.id}</Typography>
 
-            {/* Campo para editar monto */}
-            <TextField
-              type="number"
-              label="Nuevo Monto"
-              value={optionCredit?.debtAmount ?? ''}
-              onChange={(e) =>
-                setOptionCredit((prev) =>
-                  prev ? { ...prev, debtAmount: parseFloat(e.target.value) } : null
-                )
-              }
-              fullWidth
-              size="small"
-              margin="normal"
-              InputProps={{
-                sx: {
-                  borderRadius: 2,
-                },
-              }}
-            />
+                <TextField
+                  type="number"
+                  label="Nuevo Monto"
+                  value={optionCredit?.debtAmount ?? ''}
+                  onChange={(e) =>
+                    setOptionCredit((prev) =>
+                      prev ? { ...prev, debtAmount: parseFloat(e.target.value) } : null
+                    )
+                  }
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                    },
+                  }}
+                />
+              </>
+            )}
 
             {/* Campo para editar estado */}
             {originalCreditState === 3 ? (
@@ -310,40 +323,42 @@ export function HistoryView() {
                 El estado no puede ser modificado para notas de crédito.
               </Typography>
             ) : (
-              /* Para otros estados (Pendiente o Generado), mostrar opciones permitidas */
-              <Select
-                label="Estado"
-                value={optionCredit.state}
-                onChange={(e) =>
-                  setOptionCredit((prev) =>
-                    prev ? { ...prev, state: Number(e.target.value) } : null
-                  )
-                }
-                fullWidth
-                size="small"
-                displayEmpty
-                sx={{ mt: 2, borderRadius: 2 }}
-              >
-                {/* Renderizar cada MenuItem directamente */}
-                {optionCredit.state === 1 && <MenuItem value={1}>Pendiente</MenuItem>}
-                {optionCredit.state === 1 && <MenuItem value={3}>Pagado</MenuItem>}
-                
-                {optionCredit.state === 4 && <MenuItem value={4}>Generado</MenuItem>}
-                {optionCredit.state === 4 && <MenuItem value={1}>Pendiente</MenuItem>}
-                {optionCredit.state === 4 && <MenuItem value={3}>Pagado</MenuItem>}
-                
-                {optionCredit.state !== 1 && optionCredit.state !== 4 && (
-                  [
-                    <MenuItem key="1" value={1}>Pendiente</MenuItem>,
-                    <MenuItem key="3" value={3}>Pagado</MenuItem>,
-                    <MenuItem key="4" value={4}>Generado</MenuItem>
-                  ]
-                )}
-              </Select>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>Estado</Typography>
+                <Select
+                  value={optionCredit.state}
+                  onChange={(e) => {
+                    const newState = Number(e.target.value);
+                    setOptionCredit((prev) => 
+                      prev ? { ...prev, state: newState } : null
+                    );
+                  }}
+                  fullWidth
+                  size="small"
+                  sx={{ borderRadius: 2 }}
+                  renderValue={(selected) => {
+                    // Explicitly render the selected text
+                    switch (Number(selected)) {
+                      case 1: return "Pendiente";
+                      case 3: return "Pagado";
+                      case 4: return "Generado";
+                      default: return "";
+                    }
+                  }}
+                >
+                  {/* Cuando el original es Pendiente (1) */}
+                  {originalCreditState === 1 && <MenuItem value={3}>Pagado</MenuItem> }
+                  {originalCreditState === 1 && <MenuItem value={1}>Pendiente</MenuItem>}
+
+                  {/* Cuando el original es Generado (4) */}
+                  {originalCreditState === 4 && <MenuItem value={4}>Generado</MenuItem> }
+                  {originalCreditState === 4 && <MenuItem value={1}>Pendiente</MenuItem>}
+                </Select>
+              </Box>
             )}
 
-            {/* Campo para ID de factura cuando el estado es Generado (4) */}
-            {optionCredit.state === 4 && (
+            {/* Campo para ID de factura - MOSTRAR SIEMPRE excepto en estados bloqueados */}
+            {originalCreditState === 4 && (
               <>
                 <TextField
                   label="ID de Factura"
@@ -353,7 +368,7 @@ export function HistoryView() {
                   fullWidth
                   size="small"
                   margin="normal"
-                  required
+                  required={originalCreditState === 4} // Solo requerido si es Generado
                   helperText="Ingrese el ID de la factura a asociar"
                   InputProps={{
                     sx: {
@@ -378,7 +393,7 @@ export function HistoryView() {
                   fullWidth
                   size="small"
                   margin="normal"
-                  required
+                  required={originalCreditState === 4} // Solo requerido si es Generado
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -414,7 +429,7 @@ export function HistoryView() {
                       }
                     }
                     
-                    if (optionCredit.state === 4) {
+                    if (originalCreditState === 4) {
                       if (!billId || billId.trim() === '') {
                         setErrorModalMessage("Debe ingresar un ID de factura para el estado Generado");
                         setErrorModalOpen(true);
@@ -546,18 +561,33 @@ export function HistoryView() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
-
       <Dialog
         open={createCreditModalOpen}
         onClose={() => setCreateCreditModalOpen(false)}
         TransitionComponent={Transition}
         keepMounted
+        maxWidth="md"
+        fullWidth
         key={createCreditModalOpen ? 'modal-open' : 'modal-closed'} // Esto fuerza un remount
       >
-        <DialogTitle>Crear Nuevo Crédito</DialogTitle>
-        <DialogContent>
+        <DialogTitle>
+          Crear Nueva Venta a Crédito
+          <IconButton
+            aria-label="close"
+            onClick={() => setCreateCreditModalOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <Iconify icon="eva:close-fill" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
           {createCreditModalOpen && ( // Esto asegura que se renderice solo cuando está abierto
-            <CreateCreditView onSuccess={handleCreateCreditSuccess} />
+            <CreateCreditView onSuccess={handleCreateCreditSuccess} onCancel={() => setCreateCreditModalOpen(false)} />
           )}
         </DialogContent>
       </Dialog>

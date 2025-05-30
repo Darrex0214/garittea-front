@@ -13,9 +13,9 @@ import {
 import { useCreateCredit } from 'src/api/services/creditService';
 import { personService } from 'src/api/services/personService';
 import { facultyService } from 'src/api/services/facultyService';
+import { useAuth } from 'src/hooks/useAuth'; 
 
 interface FormData {
-  userId: string;
   applicantId: string;
   managingPersonId: string;
   facultyId: string;
@@ -29,22 +29,26 @@ interface Option {
 
 interface CreateCreditViewProps {
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
 const initialFormData: FormData = {
-  userId: '',
   applicantId: '',
   managingPersonId: '',
   facultyId: '',
   debtAmount: '',
 };
 
-export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
+export function CreateCreditView({ onSuccess, onCancel }: CreateCreditViewProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [peopleOptions, setPeopleOptions] = useState<Option[]>([]);
+  const [facultyManagerOptions, setFacultyManagerOptions] = useState<Option[]>([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
   const [facultiesOptions, setFacultiesOptions] = useState<Option[]>([]);
   const [loadingFaculties, setLoadingFaculties] = useState(false);
+  const [loadingManagers, setLoadingManagers] = useState(false);
+
+  const { user } = useAuth();
 
   const {
     mutate: createCredit,
@@ -94,6 +98,46 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
     fetchFaculties();
   }, []);
 
+  // Fetch faculty managers when faculty changes
+  useEffect(() => {
+    if (!formData.facultyId) {
+      setFacultyManagerOptions([]);
+      return;
+    }
+
+    const fetchFacultyManagers = async () => {
+      setLoadingManagers(true);
+      try {
+        // Ajusta esto según tu API real
+        const response = await facultyService.getFacultyById(formData.facultyId);
+        if (response.data && response.data.associatedPersons) {
+          setFacultyManagerOptions(
+            response.data.associatedPersons.map((p: any) => ({ 
+              id: p.id, 
+              name: `${p.firstname} ${p.lastname}` 
+            }))
+          );
+        } else if (response.data && response.data.inchargeperson) {
+          // Si no hay personas asociadas pero sí hay encargado
+          const person = response.data.inchargeperson;
+          setFacultyManagerOptions([
+            { id: person.id, name: `${person.firstname} ${person.lastname}` }
+          ]);
+        } else {
+          // Si no hay ni personas asociadas ni encargado
+          setFacultyManagerOptions([]);
+        }
+      } catch (e) {
+        console.error('Error fetching faculty managers:', e);
+        setFacultyManagerOptions([]);
+      } finally {
+        setLoadingManagers(false);
+      }
+    };
+
+    fetchFacultyManagers();
+  }, [formData.facultyId]);
+
   const handleSelectChange = (field: keyof FormData) => (
     _event: any,
     value: Option | null
@@ -102,6 +146,14 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
       ...prev,
       [field]: value ? value.id.toString() : '',
     }));
+
+    // Si cambia la facultad, limpiar el gestor seleccionado
+    if (field === 'facultyId') {
+      setFormData((prev) => ({
+        ...prev,
+        managingPersonId: '',
+      }));
+    }
   };
 
   const handleDebtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,15 +167,10 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
     return new Intl.NumberFormat('es-CO').format(num);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     createCredit({
-      userId: parseInt(formData.userId, 10),
+      userId: user?.id ?? 0, // Añadir el userId del usuario autenticado
       applicantId: parseInt(formData.applicantId, 10),
       managingPersonId: formData.managingPersonId
         ? parseInt(formData.managingPersonId, 10)
@@ -166,16 +213,6 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
             Crear Nuevo Crédito
           </Typography>
 
-          <TextField
-            fullWidth
-            name="userId"
-            label="ID de Usuario"
-            type="number"
-            value={formData.userId}
-            onChange={handleInputChange}
-            required
-          />
-
           <Autocomplete
             options={peopleOptions}
             getOptionLabel={(option) => option.name}
@@ -192,18 +229,6 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
                 required 
               />
             )}
-          />
-
-          <Autocomplete
-            options={peopleOptions}
-            getOptionLabel={(option) => option.name}
-            loading={loadingPeople}
-            value={
-              peopleOptions.find((opt) => opt.id.toString() === formData.managingPersonId) ||
-              null
-            }
-            onChange={handleSelectChange('managingPersonId')}
-            renderInput={(params) => <TextField {...params} label="Gestor" />}
           />
 
           <Autocomplete
@@ -225,6 +250,25 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
             )}
           />
 
+          <Autocomplete
+            options={facultyManagerOptions}
+            getOptionLabel={(option) => option.name}
+            loading={loadingManagers}
+            disabled={!formData.facultyId || loadingManagers}
+            value={
+              facultyManagerOptions.find((opt) => opt.id.toString() === formData.managingPersonId) ||
+              null
+            }
+            onChange={handleSelectChange('managingPersonId')}
+            renderInput={(params) => (
+              <TextField 
+                {...params} 
+                label="Gestor (Opcional)" 
+                helperText={!formData.facultyId ? "Primero seleccione una facultad" : ""}
+              />
+            )}
+          />
+
           <TextField
             fullWidth
             name="debtAmount"
@@ -237,15 +281,23 @@ export function CreateCreditView({ onSuccess }: CreateCreditViewProps) {
             required
           />
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={isPending}
-            sx={{ alignSelf: 'flex-end', mt: 2 }}
-          >
-            {isPending ? <CircularProgress size={24} /> : 'Crear Orden'}
-          </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isPending}
+            >
+              {isPending ? <CircularProgress size={24} /> : 'Crear Crédito'}
+            </Button>
+          </Box>
         </Box>
       </Card>
     </Container>
