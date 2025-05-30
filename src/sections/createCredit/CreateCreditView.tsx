@@ -287,7 +287,7 @@ export function CreateCreditView({ onSuccess, onCancel }: CreateCreditViewProps)
               color="primary"
               disabled={isPending}
             >
-              {isPending ? <CircularProgress size={24} /> : 'Crear Crédito'}
+              {isPending ? <CircularProgress size={24} /> : 'Crear Venta a Crédito'}
             </Button>
           </Box>
         </Box>

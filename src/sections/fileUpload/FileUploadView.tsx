@@ -12,7 +12,8 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
-import * as XLSX from 'xlsx';
+// Use xlsx-style here ONLY
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { useGetAssociatedNotes } from 'src/api/services/billService';
 
@@ -22,14 +23,28 @@ const Input = styled('input')({
 
 export function FileUploadView() {
   const [errorDialog, setErrorDialog] = useState('');
+  const [infoDialog, setInfoDialog] = useState('');
   const [successData, setSuccessData] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const getEstadoColor = (estado: string | undefined) => {
+    switch ((estado || '').toLowerCase()) {
+      case 'activo':
+        return { text: 'Activo', color: '#C8E6C9' }; // verde claro
+      case 'anulado':
+      case 'anulada':
+        return { text: 'Anulado', color: '#FFCDD2' }; // rojo claro
+      case 'nota':
+        return { text: 'Nota', color: '#BBDEFB' }; // azul claro
+      default:
+        return { text: estado || 'Desconocido', color: '#E0E0E0' }; // gris claro
+    }
+};
 
   const { mutate: getAssociatedNotes, isPending } = useGetAssociatedNotes({
     onSuccess: (results) => {
       if (!results.length) {
-        setErrorDialog('No se encontraron facturas con notas asociadas.');
+        setInfoDialog('No se encontraron facturas, asegúrese de que el formato excel sea correcto y que las facturas en el formato estén registradas en el sistema.');
         setSuccessData([]);
       } else {
         setSuccessData(results);
@@ -42,62 +57,155 @@ export function FileUploadView() {
   });
 
   const handleFile = async (file: File) => {
-    try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-  
-      const rawFacturaList: string[] = [];
-  
-      (json as any[][]).slice(2).some((row) => {
-        const facturaCell = Array.isArray(row) ? row[2] : null;
-  
-        if (!facturaCell || typeof facturaCell !== 'string' || facturaCell.trim() === '') {
-          return true; // Detiene la iteración
-        }
-  
-        const consecutivo = facturaCell.replace(/[^0-9]/g, '');
-        if (consecutivo) {
-          rawFacturaList.push(consecutivo);
-        }
-  
-        return false; // Continúa la iteración
-      });
-  
-      if (rawFacturaList.length === 0) {
-        setErrorDialog('No se encontraron consecutivos válidos en la columna Factura.');
-        return;
-      }
-  
-      console.log('Consecutivos:', rawFacturaList);
-      getAssociatedNotes(rawFacturaList);
-    } catch (err) {
-      console.error('Error reading file:', err);
-      setErrorDialog('Error leyendo el archivo.');
-    }
-  };
-  
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(successData.map(item => ({
-      'Nota Crédito': item.idNote,
-      'Factura Inicial': item.idInitialBill,
-      'Factura Reemplazo': item.idFinalBill || '',
-      'Motivo': item.reason,
-      'Valor': item.amount,
-    })));
+  try {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await file.arrayBuffer());
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([excelBuffer]), 'resultado_notas_credito.xlsx');
+    const worksheet = workbook.worksheets[0]; // toma la primera hoja
+    const rawFacturaList: string[] = [];
+
+    // Suponemos que la data empieza en la fila 3 (índice 2)
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber < 3) return; // saltar cabecera y fila 2
+
+      const cell = row.getCell(3); // columna C = índice 3 (factura)
+      const facturaText = cell?.text?.trim();
+
+      if (!facturaText) return;
+
+      const consecutivo = facturaText.replace(/[^0-9]/g, '');
+      if (consecutivo) {
+        rawFacturaList.push(consecutivo);
+      }
+    });
+
+    if (rawFacturaList.length === 0) {
+      setErrorDialog('No se encontraron consecutivos válidos en la columna Factura.');
+      return;
+    }
+
+    console.log('Consecutivos:', rawFacturaList);
+    getAssociatedNotes(rawFacturaList);
+  } catch (err) {
+    console.error('Error reading file:', err);
+    setErrorDialog('Error leyendo el archivo.');
+  }
+};
+
+  
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Resultados');
+
+    const headerRow = [
+      'Factura',
+      'Estado Factura',
+      '¿Tiene Nota Crédito?',
+      'Nota Crédito',
+      'Valor Nota Crédito',
+      'Razón Nota Crédito',
+      '¿Fue Reemplazada?',
+      'Factura Reemplazo',
+    ];
+
+    worksheet.addRow(headerRow);
+
+    // Estilo encabezados
+    const header = worksheet.getRow(1);
+    header.font = { bold: true };
+    header.alignment = { horizontal: 'center' };
+    if (header.eachCell) {
+      header.eachCell(cell => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'BBDEFB' } // azul bebé
+        };
+        cell.border = {
+          bottom: { style: 'thin' },
+        };
+      });
+    }
+
+    // Agregar filas
+    successData.forEach(item => {
+      const estado = (item.stateBill || '').toLowerCase();
+      const hasNote = (item.hasNote || '').toLowerCase();
+
+      const row = worksheet.addRow([
+        item.idbill,
+        capitalizeEstado(estado),
+        hasNote === 'sí' ? 'Sí' : 'No',
+        item.idNote ?? 'NA',
+        item.amountNote ?? 'NA',
+        item.reasonNote ?? 'NA',
+        item.wasReplaced ?? 'NA',
+        item.replacedBy ?? 'NA'
+      ]);
+      // Centrar todas las celdas de la fila
+      row.eachCell(cell => {
+        cell.alignment = { horizontal: 'center' };
+      });
+
+      // Colorear Estado Factura
+      const estadoCell = row.getCell(2);
+      switch (estado) {
+        case 'activo':
+          estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'C8E6C9' } }; // verde
+          break;
+        case 'anulado':
+        case 'anulada':
+          estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCDD2' } }; // rojo
+          break;
+        case 'nota':
+          estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'BBDEFB' } }; // azul
+          break;
+        default:
+          estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E0E0E0' } }; // gris
+          break;
+      }
+      estadoCell.font = { bold: true };
+      estadoCell.alignment = { horizontal: 'center' };
+
+      // Colorear ¿Tiene Nota Crédito?
+      const noteCell = row.getCell(3);
+      noteCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: hasNote === 'sí' ? 'C8E6C9' : 'E0E0E0' }, // verde o gris
+      };
+      noteCell.alignment = { horizontal: 'center' };
+    });
+
+    // Autoajuste de columnas
+    worksheet.columns.forEach(column => {
+    let maxLength = 10;
+    if (column.eachCell) {
+      column.eachCell({ includeEmpty: true }, cell => {
+        const val = cell.value ? cell.value.toString() : '';
+        maxLength = Math.max(maxLength, val.length);
+      });
+    }
+    column.width = maxLength + 2;
+  });
+
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), 'resultado_notas_credito.xlsx');
   };
+
+
+const capitalizeEstado = (estado: string): string => {
+  if (!estado) return 'Desconocido';
+  return estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+};
+
 
   return (
     <>
       <Box sx={{ mt: 4, maxWidth: 500, mx: 'auto', textAlign: 'center', border: '2px dashed #ccc', p: 3, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
-          Subir archivo Excel con facturas
+          Subir archivo Excel de cuentas por cobrar
         </Typography>
        
         <label htmlFor="file-upload">
@@ -141,6 +249,15 @@ export function FileUploadView() {
         <DialogContent>{errorDialog}</DialogContent>
         <DialogActions>
           <Button onClick={() => setErrorDialog('')} autoFocus>
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={!!infoDialog} onClose={() => setInfoDialog('')}>
+        <DialogTitle>Información</DialogTitle>
+        <DialogContent>{infoDialog}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInfoDialog('')} autoFocus>
             Cerrar
           </Button>
         </DialogActions>

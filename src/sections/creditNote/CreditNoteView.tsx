@@ -24,14 +24,19 @@ export function CreditNoteView() {
   
 
   const getEstadoColor = (estado: string | undefined) => {
-    switch ((estado || '').toLowerCase()) {
-      case 'activo':
-        return { text: 'Activo', color: '#2e7d32' };
-      // agregamos más colores luego
-      default:
-        return { text: estado || 'Desconocido', color: '#757575' };
-    }
-  };
+  switch ((estado || '').toLowerCase()) {
+    case 'activo':
+      return { text: 'Activo', color: '#2e7d32' }; // verde
+    case 'anulada':
+    case 'anulado':
+      return { text: 'Anulado', color: '#c62828' }; // rojo
+    case 'nota':
+      return { text: 'Nota', color: '#1565c0' }; // azul
+    default:
+      return { text: estado || 'Desconocido', color: '#757575' }; // gris
+  }
+};
+
 
   const filteredData = creditNoteData?.filter((note: CreditNote) => {
     const noteDate = note.initialBill?.date ? dayjs(note.initialBill.date) : null;

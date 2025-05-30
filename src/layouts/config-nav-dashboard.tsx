@@ -30,27 +30,27 @@ export const navData = [
   {
     title: 'Ventas a Crédito',
     path: '/home/creditos',
-    icon: icon('ic-book'),
+    icon: icon('ic-money'),
   },
   {
     title: 'Notas Crédito',
     path: '/home/notas-credito',
-    icon: icon('ic-lock'),
+    icon: icon('ic-note'),
   },
   {
-    title: 'Anulación de Facturas',
+    title: 'Creación de Notas',
     path: '/home/creacion-notas',
-    icon: icon('ic-lock'),
+    icon: icon('ic-create-note'),
   },
   {
-    title: 'Carga de reportes',
+    title: 'Carga de CXC',
     path: '/home/carga-reportes',
-    icon: icon('ic-cart'),
+    icon: icon('ic-upload'),
   },
   {
     title: 'Reportes',
     path: '/home/reportes',
-    icon: icon('ic-blog'),
+    icon: icon('ic-report'),
   },
   {
     title: 'Cerrar Sesión',
