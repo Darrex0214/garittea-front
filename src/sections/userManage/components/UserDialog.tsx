@@ -10,8 +10,7 @@ import { useForm } from 'react-hook-form';
 import { useCreateUser, useUpdateUser } from 'src/api/services/usersService';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
-import { AlertColor } from '@mui/material';
-import { User, AlertState, CreateUserData } from 'src/types/user';
+import { User, AlertState, UpdateUserData, CreateUserData } from 'src/types/user';
 
 interface UserDialogProps {
   open: boolean;
@@ -19,8 +18,6 @@ interface UserDialogProps {
   onClose: () => void;
   onSuccess: () => void;
 }
-
-interface FormInputs extends CreateUserData {}
 
 interface FormInputs {
   email: string;
@@ -43,103 +40,143 @@ export default function UserDialog({ open, user, onClose, onSuccess }: UserDialo
     severity: 'success'
   });
 
+  const createUser = useCreateUser({
+  onSuccess: () => {
+    setAlert({
+      open: true,
+      message: 'Usuario creado exitosamente',
+      severity: 'success'
+    });
+    onSuccess();
+    onClose();
+  },
+  onError: (error: any) => {
+    const errorMessage = error?.response?.data?.error || error?.message || 'Error al crear usuario';
+    setAlert({
+      open: true,
+      message: errorMessage,
+      severity: 'error'
+    });
+  },
+});
+  const updateUser = useUpdateUser({
+  onSuccess: () => {
+    setAlert({
+      open: true,
+      message: 'Usuario actualizado exitosamente',
+      severity: 'success'
+    });
+    onSuccess();
+    onClose();
+  },
+  onError: (error: any) => {
+    const errorMessage = error?.response?.data?.error || error?.message || 'Error al actualizar usuario';
+    setAlert({
+      open: true,
+      message: errorMessage,
+      severity: 'error'
+    });
+  },
+});
+
   const { 
     register, 
     handleSubmit, 
-    reset, 
+    reset,
+    setValue,
     formState: { errors, isSubmitting } 
-  } = useForm<FormInputs>({
-    defaultValues: {
-      role: 3
-    }
-  });
-
-  const createUser = useCreateUser({
-    onSuccess: () => {
-      setAlert({
-        open: true,
-        message: 'Usuario creado exitosamente',
-        severity: 'success'
-      });
-      onSuccess();
-    },
-    onError: (error: Error) => {
-      setAlert({
-        open: true,
-        message: error.message || 'Error al crear el usuario',
-        severity: 'error'
-      });
-    },
-  });
-
-  const updateUser = useUpdateUser({
-    onSuccess: () => {
-      setAlert({
-        open: true,
-        message: 'Usuario actualizado exitosamente',
-        severity: 'success'
-      });
-      onSuccess();
-    },
-    onError: (error: Error) => {
-      setAlert({
-        open: true,
-        message: error.message || 'Error al actualizar el usuario',
-        severity: 'error'
-      });
-    },
-  });
-
-  const handleCloseAlert = () => {
-    setAlert(prev => ({ ...prev, open: false }));
-  };
+  } = useForm<FormInputs>();
 
   useEffect(() => {
     if (user) {
-      reset({
-        email: user.email,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        role: user.role
-      });
+      const [firstname = '', ...lastnameParts] = user.nombre.split(' ');
+      const lastname = lastnameParts.join(' ');
+      
+      setValue('email', user.email);
+      setValue('firstname', firstname);
+      setValue('lastname', lastname);
+      setValue('role', getRoleNumber(user.rol));
     } else {
       reset({
         email: '',
         firstname: '',
         lastname: '',
-        role: 3
+        role: 3, // Valor por defecto: Colaborador
+        password: ''
       });
     }
-  }, [user, reset]);
+  }, [user, setValue, reset]);
 
-  const onSubmit = async (data: FormInputs) => {
-    try {
-      if (user) {
-        await updateUser.mutateAsync({ 
-          id: user.id.toString(), 
-          data: {
-            email: data.email,
-            firstname: data.firstname,
-            lastname: data.lastname,
-            role: Number(data.role)
-          }
-        });
-      } else {
-        await createUser.mutateAsync({
-          ...data,
-          password: data.password as string,
-          role: Number(data.role)
-        });
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setAlert({
-        open: true,
-        message: error instanceof Error ? error.message : 'Error al procesar la solicitud',
-        severity: 'error'
-      });
+  const getRoleNumber = (rolString: string): number => {
+    switch(rolString) {
+      case 'Superusuario': return 1;
+      case 'Administrador': return 2;
+      case 'Colaborador': return 3;
+      default: return 3;
     }
   };
+
+  const handleCloseAlert = () => {
+    setAlert(prev => ({
+      ...prev,
+      open: false
+    }));
+  };
+
+const onSubmit = async (data: FormInputs) => {
+  try {
+    if (user) {
+      // Actualizar usuario
+      const updateData: UpdateUserData = {
+        email: data.email.trim(),
+        firstname: data.firstname.trim(),
+        lastname: data.lastname.trim(),
+        role: Number(data.role)
+      };
+
+      if (data.password?.trim()) {
+        updateData.password = data.password.trim();
+      }
+
+      await updateUser.mutateAsync({ 
+        id: user.id.toString(), 
+        data: updateData 
+      });
+    } else {
+      // Crear nuevo usuario
+      if (!data.password) {
+        throw new Error('La contraseña es requerida para nuevos usuarios');
+      }
+
+      const createData: CreateUserData = {
+        email: data.email.trim(),
+        password: data.password.trim(),
+        firstname: data.firstname.trim(),
+        lastname: data.lastname.trim(),
+        role: Number(data.role)
+      };
+
+      await createUser.mutateAsync(createData);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    let errorMessage = 'Error al procesar la solicitud';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      // Para errores de API que pueden venir en formato diferente
+      const errorObj = error as any;
+      errorMessage = errorObj.message || errorObj.error || JSON.stringify(error);
+    }
+
+    setAlert({
+      open: true,
+      message: errorMessage,
+      severity: 'error'
+    });
+  }
+};
 
   return (
     <>
@@ -170,23 +207,17 @@ export default function UserDialog({ open, user, onClose, onSuccess }: UserDialo
               helperText={errors.email?.message}
             />
             
-            {!user && (
-              <TextField
-                fullWidth
-                type="password"
-                label="Contraseña"
-                margin="normal"
-                {...register('password', { 
-                  required: 'Contraseña es requerida',
-                  minLength: {
-                    value: 6,
-                    message: 'La contraseña debe tener al menos 6 caracteres'
-                  }
-                })}
-                error={!!errors.password}
-                helperText={errors.password?.message}
-              />
-            )}
+            <TextField
+              fullWidth
+              type="password"
+              label={user ? "Contraseña (opcional)" : "Contraseña"}
+              margin="normal"
+              {...register('password', { 
+                required: !user && 'Contraseña es requerida'
+              })}
+              error={!!errors.password}
+              helperText={user ? 'Dejar en blanco para mantener la contraseña actual' : errors.password?.message}
+            />
             
             <TextField
               fullWidth
@@ -207,20 +238,27 @@ export default function UserDialog({ open, user, onClose, onSuccess }: UserDialo
             />
             
             <TextField
-              select
-              fullWidth
-              label="Rol"
-              margin="normal"
-              {...register('role', { required: 'Rol es requerido' })}
-              error={!!errors.role}
-              helperText={errors.role?.message}
-            >
-              {roles.map((role) => (
-                <MenuItem key={role.value} value={role.value}>
-                  {role.label}
-                </MenuItem>
-              ))}
-            </TextField>
+            select
+            fullWidth
+            label="Rol"
+            margin="normal"
+            {...register('role', { required: 'Rol es requerido' })}
+            error={!!errors.role}
+            helperText={
+              errors.role?.message || 
+              (user ? `Rol actual: ${user.rol}` : 'Rol por defecto: Colaborador')
+            }
+          >
+            {roles.map((role) => (
+              <MenuItem 
+                key={role.value} 
+                value={role.value}
+                selected={user ? getRoleNumber(user.rol) === role.value : role.value === 3}
+              >
+                {role.label}
+              </MenuItem>
+            ))}
+          </TextField>
           </DialogContent>
 
           <DialogActions>
