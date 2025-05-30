@@ -6,7 +6,6 @@ import api from '../client';
 
 // Define un tipo para los datos que se envían al crear un crédito
 interface CreateCreditPayload {
-  userId: number;
   applicantId: number;
   managingPersonId: number | null; // Puede ser null según tu backend
   facultyId: number;

@@ -105,37 +105,30 @@ export function CreateCreditView({ onSuccess, onCancel }: CreateCreditViewProps)
       return;
     }
 
-    const fetchFacultyManagers = async () => {
+    const fetchFacultyManager = async () => {
       setLoadingManagers(true);
       try {
-        // Ajusta esto según tu API real
         const response = await facultyService.getFacultyById(formData.facultyId);
-        if (response.data && response.data.associatedPersons) {
-          setFacultyManagerOptions(
-            response.data.associatedPersons.map((p: any) => ({ 
-              id: p.id, 
-              name: `${p.firstname} ${p.lastname}` 
-            }))
-          );
-        } else if (response.data && response.data.inchargeperson) {
-          // Si no hay personas asociadas pero sí hay encargado
+        console.log('Respuesta de facultad:', response.data);
+        if (response.data && response.data.inchargeperson) {
+          // La facultad tiene una persona encargada
           const person = response.data.inchargeperson;
           setFacultyManagerOptions([
             { id: person.id, name: `${person.firstname} ${person.lastname}` }
           ]);
         } else {
-          // Si no hay ni personas asociadas ni encargado
+          // La facultad no tiene persona encargada
           setFacultyManagerOptions([]);
         }
       } catch (e) {
-        console.error('Error fetching faculty managers:', e);
+        console.error('Error fetching faculty manager:', e);
         setFacultyManagerOptions([]);
       } finally {
         setLoadingManagers(false);
       }
     };
 
-    fetchFacultyManagers();
+    fetchFacultyManager();
   }, [formData.facultyId]);
 
   const handleSelectChange = (field: keyof FormData) => (
@@ -170,7 +163,6 @@ export function CreateCreditView({ onSuccess, onCancel }: CreateCreditViewProps)
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     createCredit({
-      userId: user?.id ?? 0, // Añadir el userId del usuario autenticado
       applicantId: parseInt(formData.applicantId, 10),
       managingPersonId: formData.managingPersonId
         ? parseInt(formData.managingPersonId, 10)
