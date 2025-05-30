@@ -242,7 +242,6 @@ const onSubmit = async (data: FormInputs) => {
             fullWidth
             label="Rol"
             margin="normal"
-            defaultValue={3} // Valor por defecto: Colaborador
             {...register('role', { required: 'Rol es requerido' })}
             error={!!errors.role}
             helperText={
