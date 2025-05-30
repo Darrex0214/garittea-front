@@ -60,6 +60,8 @@ const getStateLabel = (state: number): string => {
       return 'Nota crédito';
     case 3:
       return 'Pagado';
+    case 4:
+      return 'Generado';
     default:
       return 'Desconocido';
   }
