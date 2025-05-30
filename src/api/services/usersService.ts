@@ -1,48 +1,37 @@
+import { User, CreateUserData, UpdateUserData } from 'src/types/user';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../client';
 import { endpoints } from '../endpoints';
 
-// Interfaces
-interface User {
-  id: number;
-  email: string;
-  nombre: string;
-  rol: string;
-}
-
-interface CreateUserData {
-  email: string;
-  password: string;
-  firstname: string;
-  lastname: string;
-  role: number;
-}
 
 // Servicio base
 export const userService = {
-  getAllUsers: () => api.get(endpoints.users),
+  getAllUsers: () => api.get<User[]>(endpoints.users),
 
-  getUserById: (id: string) => api.get(endpoints.getUserById(id)),
+  getUserById: (id: string) => api.get<User>(endpoints.getUserById(id)),
 
   searchUsers: (firstname: string) => 
-    api.get(endpoints.searchUsers, { params: { firstname } }),
+    api.get<User[]>(endpoints.searchUsers, { params: { firstname } }),
 
   createUser: async (data: CreateUserData) => {
-    const response = await api.post(endpoints.createUser, data);
+    const response = await api.post<User>(endpoints.createUser, data);
     return response.data;
   },
 
-  updateUser: async (id: string, data: Partial<CreateUserData>) => {
-    const response = await api.put(endpoints.updateUserById(id), data);
+  updateUser: async (id: string, data: UpdateUserData) => {
+    const response = await api.put<User>(endpoints.updateUserById(id), data);
     return response.data;
   },
 
-  deleteUser: (id: string) => api.delete(endpoints.deleteUserById(id)),
+  deleteUser: async (id: string) => {
+    const response = await api.delete(endpoints.deleteUserById(id));
+    return response.data;
+  },
 };
 
 // Hooks de React Query
 export const useGetUsers = () =>
-  useQuery({
+  useQuery<User[]>({
     queryKey: ['users'],
     queryFn: async () => {
       const response = await userService.getAllUsers();
@@ -51,7 +40,7 @@ export const useGetUsers = () =>
   });
 
 export const useGetUserById = (id: string) =>
-  useQuery({
+  useQuery<User>({
     queryKey: ['user', id],
     queryFn: async () => {
       const response = await userService.getUserById(id);
@@ -61,7 +50,7 @@ export const useGetUserById = (id: string) =>
   });
 
 export const useSearchUsers = (firstname: string) =>
-  useQuery({
+  useQuery<User[]>({
     queryKey: ['users', 'search', firstname],
     queryFn: async () => {
       const response = await userService.searchUsers(firstname);
@@ -72,7 +61,7 @@ export const useSearchUsers = (firstname: string) =>
 
 export const useCreateUser = (options?: {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }) =>
   useMutation({
     mutationFn: userService.createUser,
@@ -81,17 +70,17 @@ export const useCreateUser = (options?: {
 
 export const useUpdateUser = (options?: {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }) =>
   useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateUserData> }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateUserData }) =>
       userService.updateUser(id, data),
     ...options,
   });
 
 export const useDeleteUser = (options?: {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }) =>
   useMutation({
     mutationFn: userService.deleteUser,

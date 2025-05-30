@@ -5,9 +5,6 @@ export interface User {
   email: string;
   nombre: string;
   rol: string;
-  firstname: string;
-  lastname: string;
-  role: number;
 }
 
 export interface AlertState {
@@ -16,9 +13,17 @@ export interface AlertState {
   severity: AlertColor;
 }
 
+export interface UpdateUserData {
+  email: string;
+  firstname: string;
+  lastname: string;
+  role: number;
+  password?: string;
+}
+
 export interface CreateUserData {
   email: string;
-  password?: string;
+  password: string;
   firstname: string;
   lastname: string;
   role: number;

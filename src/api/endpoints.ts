@@ -33,10 +33,10 @@ export const endpoints = {
   createFaculty: '/faculty/',
 
   users: '/users',
-  getUserById: (id: string) => `/users/${id}`,
-  searchUsers: '/users/search',
   createUser: '/users',
+  getUserById: (id: string) => `/users/${id}`,
   updateUserById: (id: string) => `/users/${id}`,
   deleteUserById: (id: string) => `/users/${id}`,
+  searchUsers: '/users/search',
 
 }
