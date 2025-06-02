@@ -2,16 +2,18 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../client';
 import { endpoints } from '../endpoints';
 
+interface CreditNoteData {
+  initialBillId: number;
+  finalBillId?: number;
+  idcreditNote: number;
+  amount: number;
+  reason: string;
+}
+
 export const creditNoteService = {
   getAllCreditNotes: () => api.get(endpoints.creditNotes),
 
-  createCreditNote: async (data: {
-    initialBillId: number;
-    finalBillId?: number;
-    idcreditNote: number;
-    amount: number;
-    reason: string;
-  }) => {
+  createCreditNote: async (data: CreditNoteData) => {
     const response = await api.post(endpoints.createCreditNote, data);
     return response.data;
   },

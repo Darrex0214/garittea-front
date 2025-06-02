@@ -1,10 +1,6 @@
 import { Helmet } from 'react-helmet-async';
-
 import { CONFIG } from 'src/config-global';
-
-import { HistoryView } from 'src/sections/history/view';
-
-// ----------------------------------------------------------------------
+import  HistoryView  from 'src/sections/history/historyView';
 
 export default function Page() {
   return (

@@ -1,5 +1,5 @@
 export interface Person {
-    id: string;
+    id: number; // Cambiamos de string a number
     firstname: string;
     lastname: string;
     cellphone: string;

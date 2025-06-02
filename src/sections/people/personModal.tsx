@@ -30,13 +30,12 @@ export default function PersonModal({
   onSave,
   faculties,
 }: PersonModalProps) {
-
-  const [formData, setFormData] = useState<Omit<Person, 'id'> & { id?: string }>({
+  const [formData, setFormData] = useState<Omit<Person, 'id'> & { id?: number }>({
     firstname: '',
     lastname: '',
     cellphone: '',
     email: '',
-    faculty: [{ id: 0, name: '', phone: '' }],  // Asegúrate de que coincida con tu tipo Person
+    faculty: [{ id: 0, name: '', phone: '' }],
   });
   
   const [errors, setErrors] = useState({
@@ -163,24 +162,19 @@ export default function PersonModal({
 
   const handleSubmit = () => {
     if (validateForm()) {
-        // Crear un objeto Person válido sin incluir el ID en los datos a actualizar
       const personToSave: Person = {
-        id: formData.id || '', // Mantener el ID solo para identificación
+        id: formData.id || 0, // Usar 0 como valor por defecto para nuevas personas
         firstname: formData.firstname,
         lastname: formData.lastname,
         cellphone: formData.cellphone,
         email: formData.email,
-        // Manejar el caso donde faculty puede estar vacío
         faculty: formData.faculty && formData.faculty.length > 0
-          ? formData.faculty.map(fac => {
-              if (fac.id) return { id: fac.id, name: fac.name, phone: fac.phone };
-              return { 
-                id: 0,
-                name: fac.name,
-                phone: fac.phone || ''
-              };
-            })
-          : [] // Array vacío si no hay facultad seleccionada
+          ? formData.faculty.map(fac => ({
+              id: Number(fac.id),
+              name: fac.name,
+              phone: fac.phone || ''
+            }))
+          : []
       };
       
       onSave(personToSave);

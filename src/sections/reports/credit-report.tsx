@@ -127,19 +127,25 @@ export function CreditReport({ credits, currentDate, getStateLabel }: CreditRepo
             </View>
           </View>
 
-          {credits.map((credit) => (
+{credits.map((credit) => (
             <View key={credit.id} style={styles.tableRow}>
               <View style={[styles.column, styles.columnId]}>
                 <Text style={styles.text}>{credit.id}</Text>
               </View>
               <View style={[styles.column, styles.columnUser]}>
-                <Text style={styles.text}>{credit.user.name}</Text>
+                <Text style={styles.text}>
+                  {`${credit.user.firstname} ${credit.user.lastname}`}
+                </Text>
               </View>
               <View style={[styles.column, styles.columnApplicant]}>
-                <Text style={styles.text}>{credit.applicant.name}</Text>
+                <Text style={styles.text}>
+                  {`${credit.applicant.name} ${credit.applicant.lastname}`}
+                </Text>
               </View>
               <View style={[styles.column, styles.columnDebt]}>
-                <Text style={[styles.text, styles.textRight]}>${credit.debtAmount.toLocaleString()}</Text>
+                <Text style={[styles.text, styles.textRight]}>
+                  ${credit.debtAmount.toLocaleString()}
+                </Text>
               </View>
               <View style={[styles.column, styles.columnState]}>
                 <Text style={styles.text}>{getStateLabel(credit.state)}</Text>
@@ -153,4 +159,4 @@ export function CreditReport({ credits, currentDate, getStateLabel }: CreditRepo
       </Page>
     </Document>
   );
-} 
+}

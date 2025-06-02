@@ -35,9 +35,11 @@ import * as XLSX from 'xlsx';
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Credit } from 'src/types/credit';
-import { useGetCredits } from 'src/api/services/creditService';
+import { creditService } from 'src/api/services/creditService';
+import { useQuery } from '@tanstack/react-query';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics-current-visits';
 import { Iconify } from 'src/components/iconify';
+
 
 // Registrando los plugins de dayjs
 dayjs.extend(isSameOrAfter);
@@ -117,7 +119,18 @@ export default function ReportGenerator() {
     severity: 'success' as 'success' | 'error' | 'info' | 'warning',
   });
 
-  const { data: creditsData, isLoading } = useGetCredits();
+  const { data: creditsData, isLoading } = useQuery({
+    queryKey: ['credits'],
+    queryFn: async () => {
+      try {
+        const response = await creditService.getAllCredits();
+        return response;
+      } catch (error) {
+        console.error('Error al obtener créditos:', error);
+        return [];
+      }
+    },
+  });
 
   useEffect(() => {
     if (creditsData) {
@@ -160,7 +173,7 @@ export default function ReportGenerator() {
       const userMap = new Map<number, User>();
       credits.forEach((credit) => {
         if (credit.user && !userMap.has(credit.user.id)) {
-          userMap.set(credit.user.id, { id: credit.user.id, name: credit.user.name });
+          userMap.set(credit.user.id, { id: credit.user.id, name: `${credit.applicant?.name} ${credit.applicant?.lastname}`});
         }
       });
       setUniqueUsers(Array.from(userMap.values()));
@@ -212,7 +225,7 @@ export default function ReportGenerator() {
 
   const calculateUserStats = () => {
     const userStats = credits.reduce((acc, credit) => {
-      const userName = credit.user.name;
+      const userName = `${credit.applicant?.name} ${credit.applicant?.lastname}`;
       acc[userName] = (acc[userName] || 0) + credit.debtAmount;
       return acc;
     }, {} as Record<string, number>);
@@ -246,7 +259,7 @@ export default function ReportGenerator() {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredCredits.map(credit => ({
         ID: credit.id,
-        Usuario: credit.user.name,
+        Usuario: `${credit.applicant?.name} ${credit.applicant?.lastname}`,
         Solicitante: credit.applicant.name,
         Deuda: credit.debtAmount,
         Estado: getStateLabel(credit.state),
@@ -516,7 +529,7 @@ export default function ReportGenerator() {
                         {paginatedCredits.map((credit) => (
                           <TableRow key={credit.id}>
                             <TableCell>{credit.id}</TableCell>
-                            <TableCell>{credit.user.name}</TableCell>
+                            <TableCell>{`${credit.applicant?.name} ${credit.applicant?.lastname}`}</TableCell>
                             <TableCell>{credit.applicant.name}</TableCell>
                             <TableCell align="right">${credit.debtAmount.toLocaleString()}</TableCell>
                             <TableCell>{getStateLabel(credit.state)}</TableCell>

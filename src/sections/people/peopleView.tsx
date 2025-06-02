@@ -61,7 +61,7 @@ export function PeopleView() {
   
   // Estado para el menú de acciones
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -151,7 +151,7 @@ export function PeopleView() {
   };
 
   // Abrir/cerrar menú de acciones
-  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, personId: string) => {
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, personId: number) => {
     setAnchorEl(event.currentTarget);
     setSelectedPersonId(personId);
   };
@@ -173,32 +173,29 @@ export function PeopleView() {
   };
 
   const handleEdit = () => {
-    if (selectedPersonId) {
+    if (selectedPersonId !== null) {
       const personToEdit = people.find(person => person.id === selectedPersonId);
       handleOpenModal(personToEdit || null);
       handleCloseMenu();
     }
   };
 
-  const handleDelete = async () => {
-    if (selectedPersonId) {
+const handleDelete = async () => {
+    if (selectedPersonId !== null) {
       try {
         await personService.deletePersonById(selectedPersonId);
         setPeople(people.filter(person => person.id !== selectedPersonId));
         handleCloseMenu();
       } catch (error: any) {
         console.error('Error deleting person:', error);
-        
-        // Extraer el mensaje de error de la respuesta de la API
         let message = 'Error al eliminar la persona';
         
-        if (error.response && error.response.data && error.response.data.error) {
+        if (error.response?.data?.error) {
           message = error.response.data.error;
         } else if (error.message) {
           message = error.message;
         }
         
-        // Mostrar el diálogo de error con el mensaje
         setErrorMessage(message);
         setErrorDialogOpen(true);
         handleCloseMenu();
@@ -213,18 +210,9 @@ export function PeopleView() {
   const handleSavePerson = async (person: Person) => {
     try {
       if (person.id) {
-
-        try{
-          const response = await personService.updatePersonById(person.id, person);
-          const updatedPerson = response.data;
-        }
-        catch (error) {
-          console.error('Error updating person:', error);
-        }finally {
-          setPeople(people.map(p => p.id === person.id ? person : p));
-        }
-        
-        
+        const response = await personService.updatePersonById(person.id, person);
+        const updatedPerson = response.data;
+        setPeople(people.map(p => p.id === person.id ? updatedPerson : p));
       } else {
         const response = await personService.createPerson(person);
         const newPerson = response.data;

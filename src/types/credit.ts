@@ -2,26 +2,26 @@ export type Bill = {
   id: number;
   idBill: number;
   billdate: Date;
-  state: string;
+  state: 'activo' | 'inactivo';  // Más específico que string
 }
 
 export type Credit = {
   id: number;
   user: {
     id: number;
-    name: string;
-    lastName: string;
+    firstname: string;  // Cambiado de name
+    lastname: string;   // Cambiado de lastName
   };
   applicant: {
     id: number;
     name: string;
-    lastName: string;
+    lastname: string;   // Cambiado de lastName
   };
   managingPerson: {
     id: number;
     name: string;
-    lastName: string;
-  } | null;
+    lastname: string;   // Cambiado de lastName
+  };
   faculty: {
     id: number;
     name: string;
@@ -29,5 +29,6 @@ export type Credit = {
   debtAmount: number;
   createdAt: Date;
   state: number;
-  bills: Bill[];
+  observaciones?: string;
+  bill: Bill | null;
 }
