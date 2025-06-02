@@ -102,12 +102,12 @@ export default function HistoryView() {
   });
 
   // Actualizar los hooks personalizados
-  const { deleteMutation, updateMutation } = useCreditOperations(
-    (message) => {
-      setErrorModalMessage(message);
-      setErrorModalOpen(true);
-    }
-  );
+  const { updateMutation, createBillMutation } = useCreditOperations(
+  (message) => {
+    setErrorModalMessage(message);
+    setErrorModalOpen(true);
+  }
+);
 
   // Handlers
 
@@ -156,6 +156,7 @@ export default function HistoryView() {
     setOptionCredit(credit);
     setOriginalCreditState(credit.state);
     setEditModalOpen(true);
+    setOptionAnchorEl(null);
   };
 
   const handleDeleteClick = (creditToDelete: Credit) => {
@@ -167,33 +168,127 @@ export default function HistoryView() {
     }
   };
 
-  // Actualizar el manejador de confirmación de eliminación
-  const handleConfirmDelete = async () => {
-    if (!optionCredit) return;
-    
+  const handleUpdateCredit = async (updatedCredit: Credit, billId?: string, billDate?: Date) => {
     try {
-      console.log('Intentando eliminar crédito:', optionCredit.id);
-      await deleteMutation.mutateAsync(optionCredit.id);
-      
-      // Cerrar modal y limpiar estado
-      setConfirmDeleteOpen(false);
+      // Estado Generado (4)
+      if (updatedCredit.state === 4) {
+        if (billId) {
+          try {
+            // 1. Primero creamos la factura
+            const newBill = await createBillMutation.mutateAsync({
+              billId: parseInt(billId, 10),
+              orderId: updatedCredit.id 
+            });
+
+            // 2. Si la factura se creó exitosamente, actualizamos el crédito
+            if (newBill) {
+              await updateMutation.mutateAsync({
+                id: updatedCredit.id,
+                data: {
+                  debtAmount: updatedCredit.debtAmount,
+                  state: 1, // Cambio a Pendiente
+                  observaciones: updatedCredit.observaciones,
+                  bill: {
+                    idBill: newBill.idbill,
+                    billdate: billDate || new Date(),
+                    state: 'activo'
+                  }
+                }
+              });
+
+              setAlert({
+                open: true,
+                message: 'Factura creada y asociada. Crédito actualizado a Pendiente',
+                severity: 'success'
+              });
+            }
+          } catch (error: any) {
+            // Manejo específico de errores de factura
+            const errorMessage = error?.response?.data?.error || 'Error al crear la factura';
+            setAlert({
+              open: true,
+              message: errorMessage,
+              severity: 'error'
+            });
+            throw new Error(errorMessage);
+          }
+        } else {
+          // Solo actualiza monto y observaciones en estado Generado
+          await updateMutation.mutateAsync({
+            id: updatedCredit.id,
+            data: {
+              debtAmount: updatedCredit.debtAmount,
+              observaciones: updatedCredit.observaciones
+            }
+          });
+          setAlert({
+            open: true,
+            message: 'Crédito actualizado exitosamente',
+            severity: 'success'
+          });
+        }
+      }
+      // Estado Pendiente (1)
+      else if (originalCreditState === 1) {
+        if (updatedCredit.state === 3) {
+          // Cambio a Pagado
+          await updateMutation.mutateAsync({
+            id: updatedCredit.id,
+            data: {
+              state: 3,
+              observaciones: updatedCredit.observaciones
+            }
+          });
+          setAlert({
+            open: true,
+            message: 'Crédito marcado como Pagado',
+            severity: 'success'
+          });
+        } else {
+          // Solo actualiza observaciones
+          await updateMutation.mutateAsync({
+            id: updatedCredit.id,
+            data: {
+              observaciones: updatedCredit.observaciones
+            }
+          });
+          setAlert({
+            open: true,
+            message: 'Observaciones actualizadas',
+            severity: 'success'
+          });
+        }
+      }
+      // Estados finales (Pagado o Nota Crédito)
+      else if (updatedCredit.state === 3 || updatedCredit.state === 2) {
+        await updateMutation.mutateAsync({
+          id: updatedCredit.id,
+          data: {
+            observaciones: updatedCredit.observaciones
+          }
+        });
+        setAlert({
+          open: true,
+          message: 'Observaciones actualizadas',
+          severity: 'success'
+        });
+      }
+
+      setEditModalOpen(false);
       setOptionCredit(null);
-      
-      // Mostrar mensaje de éxito
+    } catch (error: any) {
+      console.error('Error al actualizar:', error);
       setAlert({
         open: true,
-        message: 'Venta a crédito eliminada exitosamente',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error('Error al eliminar:', error);
-      setAlert({
-        open: true,
-        message: 'Error al eliminar la venta a crédito',
+        message: error.message || 'Error al actualizar el crédito',
         severity: 'error'
       });
     }
   };
+
+  
+
+  // Paginación
 
   const paginatedCredits = credits.slice(
     page * rowsPerPage,
@@ -303,88 +398,55 @@ return (
         onClose={() => setSelectedCredit(null)} 
       />
 
-        <EditCreditModal 
-          open={editModalOpen}
-          credit={optionCredit}
-          originalState={originalCreditState}
-          onClose={() => {
-            setEditModalOpen(false);
-            setOptionCredit(null);
-          }}
-          onSave={async (updatedCredit, billId, billDate) => {
-            try {
-              if (updatedCredit.state === 4 && billId) {
-                await updateMutation.mutateAsync({
-                  id: updatedCredit.id.toString(),
-                  data: {
-                    debtAmount: updatedCredit.debtAmount,
-                    state: updatedCredit.state,
-                    bills: [{
-                      idBill: parseInt(billId, 10),
-                      id: 0,
-                      billdate: billDate || new Date(),
-                      state: "active"
-                    }]
-                  },
-                });
-              } else {
-                await updateMutation.mutateAsync({
-                  id: updatedCredit.id.toString(),
-                  data: {
-                    debtAmount: updatedCredit.debtAmount,
-                    state: updatedCredit.state,
-                  },
-                });
-              }
-              
-              setEditModalOpen(false);
-              setOptionCredit(null);
-            } catch (error: any) {
-              setErrorModalMessage(error.response?.data?.error || "Error al actualizar el crédito");
-              setErrorModalOpen(true);
-            }
-          }}
-        />
+      <EditCreditModal 
+        open={editModalOpen}
+        credit={optionCredit}
+        onClose={() => {
+          setEditModalOpen(false);
+          setOptionCredit(null);
+        }}
+        onSave={handleUpdateCredit}
+      />    
 
-        <DeleteConfirmModal 
-          open={confirmDeleteOpen}
-          credit={optionCredit} // Pasamos el crédito guardado
-          onClose={() => {
-            setConfirmDeleteOpen(false);
-            setOptionCredit(null);
-            setOptionAnchorEl(null); // Aseguramos que el popover esté cerrado
-          }}
-          onSuccess={() => {
-            setAlert({
-              open: true,
-              message: 'Venta a crédito eliminada exitosamente',
-              severity: 'success'
-            });
-            // Limpiamos todos los estados
-            setOptionCredit(null);
-            setOptionAnchorEl(null);
-          }}
-        />
+      <DeleteConfirmModal 
+        open={confirmDeleteOpen}
+        credit={optionCredit} // Pasamos el crédito guardado
+        onClose={() => {
+          setConfirmDeleteOpen(false);
+          setOptionCredit(null);
+          setOptionAnchorEl(null); // Aseguramos que el popover esté cerrado
+        }}
+        onSuccess={() => {
+          setAlert({
+            open: true,
+            message: 'Venta a crédito eliminada exitosamente',
+            severity: 'success'
+          });
+          // Limpiamos todos los estados
+          setOptionCredit(null);
+          setOptionAnchorEl(null);
+        }}
+      />
 
-        <CreditDialog 
-          open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          onSuccess={() => {
-            // Recargar datos si es necesario
-          }}
-        />
+      <CreditDialog 
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        onSuccess={() => {
+          // Recargar datos si es necesario
+        }}
+      />
 
-        {/* Actualizar el OptionsPopover */}
-        <OptionsPopover 
-          anchorEl={optionAnchorEl}
-          credit={optionCredit}
-          onClose={() => {
-            setOptionAnchorEl(null);
-            setOptionCredit(null);
-          }}
-          onEditClick={openEditModal}
-          onDeleteClick={handleDeleteClick}
-        />
+      {/* Actualizar el OptionsPopover */}
+      <OptionsPopover 
+        anchorEl={optionAnchorEl}
+        credit={optionCredit}
+        onClose={() => {
+          setOptionAnchorEl(null);
+          setOptionCredit(null);
+        }}
+        onEditClick={openEditModal}
+        onDeleteClick={handleDeleteClick}
+      />
     </Container>
   );
 }

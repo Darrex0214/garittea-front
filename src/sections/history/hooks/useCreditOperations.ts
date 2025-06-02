@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { creditService } from '../../../api/services/creditService';
+import { billService } from '../../../api/services/billService';
 
 interface FormInputs {
   applicantId: number;
@@ -17,6 +18,20 @@ interface CreateCreditPayload {
   userId: number;
   state?: number;
   observaciones?: string;
+}
+
+interface UpdateCreditInput {
+  id: number;  // Cambiado a number para coincidir con el tipo Credit
+  data: {
+    debtAmount?: number;
+    state?: number;
+    observaciones?: string;
+    bill?: {
+      idBill: number;
+      billdate: Date;
+      state: string;
+    };
+  }
 }
 
 export const useCreditOperations = (onError: (message: string) => void) => {
@@ -42,15 +57,30 @@ export const useCreditOperations = (onError: (message: string) => void) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      creditService.updateCreditById(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['credits'] });
-    },
-    onError: (error: any) => {
-      const message = error?.response?.data?.error || 'Error al actualizar el crédito';
-      onError(message);
-    },
+    mutationFn: ({ id, data }: UpdateCreditInput) => {
+      console.log('Actualizando crédito:', { id, data });
+      return creditService.updateCreditById(id.toString(), {
+        ...data,
+        // Validaciones específicas según el estado
+        debtAmount: data.debtAmount && !data.bill ? data.debtAmount : undefined,
+        state: data.state !== undefined ? data.state : undefined,
+        observaciones: data.observaciones,
+        bill: data.bill ? {
+          idBill: data.bill.idBill,
+          billdate: data.bill.billdate,
+          state: data.bill.state
+        } : undefined
+    });
+      },
+      onSuccess: (response) => {
+        console.log('Crédito actualizado exitosamente:', response);
+        queryClient.invalidateQueries({ queryKey: ['credits'] });
+      },
+      onError: (error: any) => {
+        console.error('Error en updateMutation:', error);
+        const message = error?.response?.data?.error || 'Error al actualizar el crédito';
+        onError(message);
+      },
   });
 
   const deleteMutation = useMutation({
@@ -68,9 +98,23 @@ export const useCreditOperations = (onError: (message: string) => void) => {
     },
   });
 
+  const createBillMutation = useMutation({
+    mutationFn: ({ billId, orderId }: { billId: number; orderId: number }) => 
+      billService.dispatchBill({
+        idbill: billId,
+        orderId,
+        billdate: new Date()
+      }),
+    onError: (error: any) => {
+      const message = error?.response?.data?.error || 'Error al crear la factura';
+      onError(message);
+    }
+  });
+
   return { 
     createMutation,
     updateMutation,
-    deleteMutation 
+    deleteMutation,
+    createBillMutation
   };
 };

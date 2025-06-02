@@ -74,9 +74,7 @@ export const CreditTable = ({
                   backgroundColor: alpha(getEstadoTexto(credit.state).color, 0.15),
                   padding: '4px 8px',
                   borderRadius: '4px',
-                  display: 'inline-block',
-                  marginTop: '18px',
-                  marginLeft: '58px'
+                  display: 'inline-block'
                 }}>
                   {getEstadoTexto(credit.state).text}
                 </span>

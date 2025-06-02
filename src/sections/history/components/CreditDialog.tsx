@@ -56,6 +56,13 @@ export const CreditDialog = ({ open, onClose, onSuccess }: CreditDialogProps) =>
     severity: 'success'
   });
 
+  const formatCurrency = (value: number): string => new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+
   const handleError = (message: string) => {
     setAlert({
       open: true,
@@ -185,21 +192,31 @@ export const CreditDialog = ({ open, onClose, onSuccess }: CreditDialogProps) =>
               )}
             />
             
-            <TextField
-              fullWidth
-              type="number"
-              label="Monto de la deuda"
-              margin="normal"
-              {...register('debtAmount', { 
+            <Controller
+              name="debtAmount"
+              control={control}
+              rules={{ 
                 required: 'Monto es requerido',
-                valueAsNumber: true, // Convertir a número
                 min: {
                   value: 1,
                   message: 'El monto debe ser mayor a 0'
                 }
-              })}
-              error={!!errors.debtAmount}
-              helperText={errors.debtAmount?.message}
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Monto de la deuda"
+                  margin="normal"
+                  value={field.value ? formatCurrency(field.value).replace('COP', '').trim() : ''}
+                  onChange={(e) => {
+                    const cleanValue = e.target.value.replace(/[^0-9]/g, '');
+                    field.onChange(cleanValue ? parseInt(cleanValue, 10) : '');
+                  }}
+                  error={!!errors.debtAmount}
+                  helperText={errors.debtAmount?.message}
+                />
+              )}
             />
 
             <Controller
