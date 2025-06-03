@@ -104,7 +104,7 @@ const { data: facultadesTop, isLoading: loadingTop, isError: errorTop } =
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Hi, Welcome back 👋
+        Hola, Bienvenido de nuevo! 👋
       </Typography>
 
       <Grid container spacing={3}>
